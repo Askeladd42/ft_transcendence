@@ -33,3 +33,9 @@ p {
 	border-radius: 30px;
 	border: 6px dashed orange;
 }
+
+.show-response {
+	visibility: visible;
+	opacity: 1;
+	transform: translateX(0);
+}
