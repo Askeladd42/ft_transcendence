@@ -1,2 +1,3 @@
-# ft_transcendance
-(ENG) My common-core final project recreating a multiplayer pong game with server and chat services, using ReactJS for the front-end, NestJS for back-end, and PostgreSQL for the database.
+# Transcendence
+
+Mockup du projet: https://www.canva.com/design/DAFpjE749RU/sX1R3qi-L8FaDcHGHH9SZg/edit?utm_content=DAFpjE749RU&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
