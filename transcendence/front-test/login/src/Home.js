@@ -1,5 +1,6 @@
 import home from './fonts/home.svg';
 import gear from './fonts/gear.svg';
+import LoginForm from "./LoginForm";
 import homeBeat from './fonts/home_beat.svg';
 import './Header.css'
 
@@ -11,7 +12,6 @@ function Home() {
 		</div>
 	);
 }
-
 export default Home;
 
 // function Header() {
