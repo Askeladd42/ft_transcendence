@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, HttpCode, HttpStatus, Param, UseGuards} from '@nestjs/common';
 import { User as UserModel } from '@prisma/client';
 import { UserService } from '../users/users.service';
+import { Public } from '../auth/JWTconstant';
 
 //import { }
 
@@ -110,6 +111,7 @@ export class ApiController {
 	// }
 
 	//@HttpCode(HttpStatus.OK)
+	@Public()
 	@Post('user')
 	async newUser(
 	  @Body() userData: { name?: string; email: string },

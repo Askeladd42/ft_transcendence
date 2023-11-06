@@ -1,0 +1,17 @@
+.edit-buttons {
+    display: flex;        /* Utiliser flexbox */
+    flex-direction: column;/* Empiler verticalement */
+    align-items: center;   /* Centrer horizontalement */
+    gap: 10px;            /* Espacement entre les boutons */
+  }
+  
+  .edit-btn {
+    background-color: #9f00c5;
+    color: #fff;
+    border: none; /* Pas de bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Apparence du curseur pour le clic */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-family: 'Orbitron', sans-serif; /* Typographie futuriste */
+    padding: 10px 20px; /* Ajouter du padding pour mieux formater les boutons */
+  }

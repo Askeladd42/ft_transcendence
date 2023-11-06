@@ -1,0 +1,88 @@
+/* game.css */
+.body-container {
+    margin: 0;
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .style-container {
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    width : 100vh;
+    background-image: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+    font-family: 'Orbitron', sans-serif;
+    border: 1px solid #9f00c5;
+    border-radius: 8px; 
+    box-shadow: 0px 0px 5px #9f00c5;
+  }
+  
+  .game-container {
+    width: 500px;
+    height: 300px;
+    margin-top: 10px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1f1e25;
+    border: 2px solid #9f00c5;
+    box-shadow: 0px 0px 10px #9f00c5;
+  }
+  
+  .score-container {
+    display: flex;
+    justify-content: space-between;
+    width: 500px;
+    margin-bottom: 10px; 
+    background-color: rgba(0, 0, 0, 0.4); 
+    padding: 5px 0;
+    border: 1px solid #9f00c5;
+    border-radius: 8px; 
+    box-shadow: 0px 0px 5px #9f00c5;
+  }
+  .title-container {
+      font-size: 36px;
+      color: #9f00c5;
+      font-weight: bold;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-family: 'Orbitron', sans-serif;
+      background: -webkit-linear-gradient(#9f00c5, #0affd1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+  
+  
+  .left-score, .right-score {
+    color: #0affd1;
+    font-size: 24px;
+    text-shadow: 0px 0px 5px rgba(159, 0, 197, 0.8);
+    animation: pulse 2s infinite ease-in-out;
+  }
+  
+  .quit-game-btn {
+    padding: 10px 15px;
+    background-color: #9f00c5;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+    line-height: 50px;
+    font-family: 'Orbitron', sans-serif;
+  }
+  .horizontal-center {
+    display: flex;
+    justify-content: center;
+  }
+  .quit-game-btn:hover {
+    color: #2c0038; /* Changement de la couleur du texte lors du survol */
+    box-shadow: 0px 0px 12px rgba(159, 0, 197, 0.5); /* Ombre plus prononcée */
+    transform: scale(1.1);
+  }

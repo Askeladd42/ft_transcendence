@@ -1,6 +1,8 @@
 import { Injectable, UnauthorizedException} from '@nestjs/common';
 import { UserService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class AuthService {
@@ -12,8 +14,14 @@ export class AuthService {
   async validUserPW(mail: string, pass: string): Promise<any> {
 	console.log("[auth service validUser] function call with mail ", mail, " pass ", pass)
     const myuser =  await this.usersService.user({email: mail});
-	console.log("My user is ", myuser)
-	if (myuser && await this.usersService.checkuserpass(pass, myuser?.id) != true) {
+	const mypass = await this.usersService.IdGetPass(myuser.id);
+	const ismatch = await bcrypt.compare(pass, mypass.salted_password);
+	//const ismatch = await bcrypt.compare(pass, mypass.salt, null);
+	//console.log("[validuserpw] It looks like the password match between ", pass, "and the salt gives ", ismatch);
+	//console.log("[validuserpw] It looks like the password match between ", mypass.salted_password, "and the salt gives ", ismatch);
+	//console.log("My user is ", myuser)
+	if (myuser && ismatch != true) {
+//	if (myuser && await this.usersService.checkuserpass(pass, myuser?.id) != true) {
 		console.log("Failed to sign in")
 		return (null);
 	}

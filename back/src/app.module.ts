@@ -11,10 +11,13 @@ import { MatchmakingModule } from './matchmaking/matchmaking.module';
 import { ChannelModule } from './channel/channel.module';
 import { RelationModule } from './relation/relation.module';
 import { PrivateMessageModule } from './privateMessage/privateMessage.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt.guard';
 
 @Module({
-  imports: [AuthModule, UsersModule, ConfigModule.forRoot({ignoreEnvFile: true,}), ApiModule, PrismaModule, GameModule, MatchmakingModule, ChannelModule, RelationModule, PrivateMessageModule],
+  imports: [AuthModule, UsersModule, ConfigModule.forRoot({ignoreEnvFile: true,}), ApiModule, PrismaModule, GameModule, MatchmakingModule, ChannelModule, RelationModule, PrivateMessageModule,],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService
+	],
 })
 export class AppModule {}

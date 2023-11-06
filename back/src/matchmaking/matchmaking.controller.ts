@@ -7,6 +7,17 @@ export class MatchmakingController
 {
   constructor(private matchmakingService: MatchmakingService) {}
 
+
+    // return active matchmaking with matchmakingId
+    @Get('/matchmakingId/:matchmakingId(\\d+)')
+    async findMatchmakingById(
+        @Param('matchmakingId') matchmakingId: number
+    ): Promise<Matchmaking | undefined>
+    {
+        return this.matchmakingService.findMatchmakingById(matchmakingId);
+    }
+    
+
     // return active matchmaking with userId
     @Get('/userId/:userId(\\d+)')
     async findMatchmakingByUser(

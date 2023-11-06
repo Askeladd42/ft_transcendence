@@ -1,0 +1,66 @@
+/* chat.css */
+.chat-icon-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+
+#chatIcon {
+    width: 50px;
+    height: 50px;
+}
+
+#chatContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 500px;
+    background-color: #1f1e25;
+    border: 2px solid #9f00c5;
+    box-shadow: 0px 0px 10px #9f00c5;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+.close-chat {
+    font-size: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.chat-header {
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: #0affd1;
+    font-family: 'Orbitron', sans-serif;
+    text-align: center;
+    font-size: 24px;
+    border-bottom: 2px solid #9f00c5;
+}
+
+.chat-content {
+    overflow-y: auto;
+    max-height: 400px;
+    padding: 10px;
+}
+
+.chat-input-container {
+    padding: 10px;
+    border-top: 2px solid #9f00c5;
+}
+
+.chat-input-container input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    outline: none;
+}
+
+.chat-container-hidden {
+    max-height: 0;
+}

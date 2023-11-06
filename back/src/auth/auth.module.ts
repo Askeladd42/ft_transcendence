@@ -13,10 +13,10 @@ import { JwtAuthGuard } from './jwt.guard';
 @Module({
   controllers: [AuthController],
   providers: [AuthService, UsersModule, LocalStrategy, JwtStrategy,
-//   {
-//     provide: APP_GUARD,
-//     useClass: JwtAuthGuard,
-//   }
+  {
+    provide: APP_GUARD,
+    useClass: JwtAuthGuard,
+  }
 	],
   imports: [UsersModule, PassportModule, JwtModule.register({
 	secret: jwtConstant.secret,

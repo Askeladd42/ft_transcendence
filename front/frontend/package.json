@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "canvas": "^2.11.2",
     "cookie-universal-nuxt": "^2.2.2",
+    "konva": "^9.2.2",
     "vue3-cookies": "^1.0.6"
   }
 }

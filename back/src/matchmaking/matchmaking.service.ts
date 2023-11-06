@@ -120,6 +120,14 @@ export class MatchmakingService
         }, 1000);
     }
 
+    async findMatchmakingById(matchmakingId: number): Promise<Matchmaking | undefined>
+    {
+        if (this.matchmaking.find((matchmaking) => matchmaking.id == matchmakingId))
+            return this.matchmaking.find((matchmaking) => matchmaking.id == matchmakingId);
+        else
+            return undefined;
+    }
+
     // find matchmaking with userId (or duel)
     async findMatchmakingByUser(userId: number): Promise<Matchmaking | undefined>
     {
