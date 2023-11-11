@@ -15,6 +15,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 		console.log("[local strategy validate] exception gaming")
       throw new UnauthorizedException();
     }
-    return state;
+	console.log("[local strategy validate] validated by local")
+    return (state);
   }
 }

@@ -43,19 +43,23 @@
 }
 
 .chat-content {
+    height: 200px;
     overflow-y: auto;
     max-height: 400px;
     padding: 10px;
 }
 
 .chat-input-container {
+    height: 20px;
     padding: 10px;
     border-top: 2px solid #9f00c5;
 }
 
 .chat-input-container input {
     width: 100%;
-    padding: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
     border: none;
     border-radius: 4px;
     outline: none;
@@ -63,4 +67,13 @@
 
 .chat-container-hidden {
     max-height: 0;
+}
+.friend-chat {
+    height: 100px;
+    width : 50px;
+}
+.friend-item:hover {
+    background-color: #9f00c5;
+    color: #fff;
+    cursor: pointer;
 }

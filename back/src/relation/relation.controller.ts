@@ -10,9 +10,9 @@ export class RelationController {
   @Get('/findMyBlocked/:userId(\\d+)')
   findMyBlocked(
     @Param('userId') userId: number
-  ): Blocked[]
+  ): number[]
   {
-    return this.relationService.findMyBlocked(userId);
+    return this.relationService.findMyBlockedIdOnly(userId);
   }
 
   @Post('/blockSomeone/:userId(\\d+)/:userIdToBlock(\\d+)')
@@ -36,25 +36,25 @@ export class RelationController {
   @Get('/findMyFriend/:userId(\\d+)')
   findMyFriend(
     @Param('userId') userId: number
-  ): Friend[]
+  ): number[]
   {
-    return this.relationService.findMyFriend(userId);
+    return this.relationService.findMyFriendIdOnly(userId);
   }
 
   @Get('/findMyPendingRequest/:userId(\\d+)')
   findMyPendingRequest(
     @Param('userId') userId: number
-  ): Friend[]
+  ): number[]
   {
-    return this.relationService.findMyPendingRequests(userId);
+    return this.relationService.findMyPendingRequestsIdOnly(userId);
   }
 
   @Get('/findFriendEmmitedRequest/:userId(\\d+)')
   findMyEmmitedRequest(
     @Param('userId') userId: number
-  ): Friend[]
+  ): number[]
   {
-    return this.relationService.findMyEmmitedRequest(userId);
+    return this.relationService.findMyEmmitedRequestIdOnly(userId);
   }
 
   @Post('/emmitOrAcceptFriendRequest/:userId(\\d+)/:userIdRequest(\\d+)')

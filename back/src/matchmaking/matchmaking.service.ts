@@ -18,7 +18,7 @@ export class MatchmakingService
 
             for (let i = 0; i < this.matchmaking.length; i++)
             {
-                // console.log("matchmaking Id:",this.matchmaking[i].id);
+                // console.log("matchmaking Id:",this.matchmaking[i].id, " is Ranked :",this.matchmaking[i].isRanked);
                 if (!this.matchmaking[i].isMatchmakingLinked)
                 {
                     for (let j = 0; j < this.matchmaking.length; j++)
@@ -73,13 +73,15 @@ export class MatchmakingService
                     {
                         if (game.isRanked == true)
                         {
+                            console.log("eruwhgiuewhrgy")
+
                             const PrismaUser1 = await this.prisma.user.findUnique({where: { id: Number(game.userId1) },});
                             const PrismaUser2 = await this.prisma.user.findUnique({where: { id: Number(game.userId2) },});
                             if (!PrismaUser1 || !PrismaUser2)
                                 break;
 
-                            const newEloUser1 = this.eloCalc(PrismaUser1.elo, PrismaUser2.elo, game.scoreUser1, game.scoreUser2);
-                            const newEloUser2 = this.eloCalc(PrismaUser2.elo, PrismaUser1.elo, game.scoreUser2, game.scoreUser1);
+                            const newEloUser1: number = this.eloCalc(PrismaUser1.elo, PrismaUser2.elo, game.scoreUser1, game.scoreUser2);
+                            const newEloUser2: number = this.eloCalc(PrismaUser2.elo, PrismaUser1.elo, game.scoreUser2, game.scoreUser1);
 
                             const PrismaUser1Updated = await prisma.user.update(
                             {
@@ -89,7 +91,7 @@ export class MatchmakingService
                                 },
                                 data:
                                 {
-                                    elo: newEloUser1
+                                    elo: Number(newEloUser1)
                                 },
                             });
 
@@ -101,7 +103,7 @@ export class MatchmakingService
                                 },
                                 data:
                                 {
-                                    elo: newEloUser2
+                                    elo: Number(newEloUser2)
                                 },
                             });
 
@@ -109,17 +111,26 @@ export class MatchmakingService
                                 break;
                             // check for rank;
                         }
+                        let id_matchmaking_EloDone: number = this.matchmaking[i].idGameLinked ;
                         delete this.matchmaking[i];
                         this.matchmaking.splice(i, 1);
+                        for (let k = 0; k < this.matchmaking.length; k++)
+                        {
+                            if (this.matchmaking[k].idGameLinked == id_matchmaking_EloDone)
+                            {
+                                delete this.matchmaking[k];
+                                this.matchmaking.splice(k, 1);
+                                break;
+                            }
+                        }
                     }
-                    // else
-                    //     console.log("matchmaking Id:",this.matchmaking[i].id, " matched with game Id:", this.matchmaking[i].idGameLinked);
+                    //  else
+                    //      console.log("matchmaking Id:",this.matchmaking[i].id, " matched with game Id:", this.matchmaking[i].idGameLinked);
                 }
             }
 
         }, 1000);
     }
-
     async findMatchmakingById(matchmakingId: number): Promise<Matchmaking | undefined>
     {
         if (this.matchmaking.find((matchmaking) => matchmaking.id == matchmakingId))
@@ -138,11 +149,11 @@ export class MatchmakingService
     }
 
     // create matchmaking
-    async createMatchmaking(userId: number, isRanked: boolean, isCyber: boolean): Promise<Matchmaking | undefined>
+    async createMatchmaking(userId: number, isRanked: boolean): Promise<Matchmaking | undefined>
     {
         if (this.matchmaking.find((matchmaking) => matchmaking.userId == userId))
         {
-            // console.log("matchmaking Id is already present:",this.matchmaking.find((matchmaking) => matchmaking.userId == userId).id);
+            //  console.log("matchmaking Id is already present:",this.matchmaking.find((matchmaking) => matchmaking.userId == userId).id);
             return undefined;
         }
 
@@ -159,8 +170,8 @@ export class MatchmakingService
             id: ++this.numberMatchmaking,
             userId: userId,
             userElo: PrismaUser.elo,
+            userOldElo: PrismaUser.elo,
             isRanked: isRanked,
-            isCyber: isCyber,
             date: new Date(),
             isDuel: false,
             isDuelAccepted: false,
@@ -187,7 +198,7 @@ export class MatchmakingService
         return false;
     }
 
-    async createDuelRequest(userId: number, targetUserId: number, isCyber: boolean): Promise<Matchmaking | undefined>
+    async createDuelRequest(userId: number, targetUserId: number): Promise<Matchmaking | undefined>
     {
         if (this.matchmaking.find((matchmaking) => matchmaking.userId == userId) ||
             this.matchmaking.find((matchmaking) => matchmaking.userId == targetUserId))
@@ -207,8 +218,8 @@ export class MatchmakingService
             id: ++this.numberMatchmaking,
             userId: userId,
             userElo: PrismaUser.elo,
+            userOldElo: PrismaUser.elo,
             isRanked: false,
-            isCyber: isCyber,
             date: new Date(),
             isDuel: true,
             isDuelAccepted: true,
@@ -222,8 +233,8 @@ export class MatchmakingService
             id: ++this.numberMatchmaking,
             userId: targetUserId,
             userElo: PrismaUserTarget.elo,
+            userOldElo: PrismaUserTarget.elo,
             isRanked: newDuel.isRanked,
-            isCyber: newDuel.isCyber,
             date: newDuel.date,
             isDuel: newDuel.isDuel,
             isDuelAccepted: false,
@@ -279,7 +290,7 @@ export class MatchmakingService
     // create game from 2 matchmaking
     async createGame(matchmaking1: Matchmaking, matchmaking2: Matchmaking): Promise<number>
     {
-        const gameId = await this.game.createNewGame(matchmaking1.userId, matchmaking2.userId, matchmaking1.isRanked, matchmaking1.isCyber);
+        const gameId = await this.game.createNewGame(matchmaking1.userId, matchmaking2.userId, matchmaking1.isRanked);
         if (gameId)
             return gameId;
         else
@@ -288,9 +299,23 @@ export class MatchmakingService
 
     private eloCalc(eloSelf: number, eloFoe: number, scoreSelf: number, scoreFoe: number): number
     {
+        let newElo: number
         if (scoreSelf >= scoreFoe)
-            return (eloSelf + (scoreSelf - scoreFoe) * (10 * eloFoe / eloSelf));
+            newElo = eloSelf + (scoreSelf - scoreFoe) * (eloFoe / eloSelf) + 10;
         else
-            return (eloSelf + (scoreSelf - scoreFoe) * (10 * eloSelf / eloFoe))
+            newElo = eloSelf + (scoreSelf - scoreFoe) * (eloSelf / eloFoe) - 10;
+
+        console.log("1-->", eloSelf, " -> ", newElo)
+
+        if (newElo <= eloSelf - 100)
+            newElo = eloSelf - 100;
+        else if (newElo >= eloSelf + 100)
+            newElo = eloSelf + 100;
+
+        console.log("2-->", eloSelf, " -> ", newElo)
+
+        if (newElo <= 100)
+            return 100;
+        return newElo;
     }
 }

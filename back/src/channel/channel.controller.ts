@@ -92,7 +92,7 @@ export class ChannelController {
   async updateChannelPrivacy(
     @Param('channelId')channelId: number,
     @Param('userId')userId: number,
-    @Param('newPrivacy')newPrivacy: boolean,
+    @Param('newPrivacy', ParseBooleanPipe)newPrivacy: boolean,
   ): Promise<boolean>
   {
     return this.channelService.updateChannelPrivacy(channelId, userId, newPrivacy);
@@ -102,7 +102,7 @@ export class ChannelController {
   async updateChannelPassword(
     @Param('channelId')channelId: number,
     @Param('userId')userId: number,
-    @Param('newPassword')newPassword: string,
+    @Param('newPassword', ParseBooleanPipe)newPassword: string,
   ): Promise<boolean>
   {
     return this.channelService.updateChannelPassword(channelId, userId, newPassword);

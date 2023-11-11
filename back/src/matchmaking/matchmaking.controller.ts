@@ -1,12 +1,25 @@
 import {  Controller, Get, Post, Put, Param, Delete } from '@nestjs/common';
+import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
 import { MatchmakingService } from './matchmaking.service';
 import { Matchmaking } from './interfaces/matchmaking.interface';
+
+@Injectable()
+export class ParseBooleanPipe implements PipeTransform<string, boolean> {
+  transform(value: string, metadata: ArgumentMetadata): boolean {
+    if (value.toLowerCase() === 'true') {
+      return true;
+    } else if (value.toLowerCase() === 'false') {
+      return false;
+    } else {
+      throw new BadRequestException('Invalid boolean value');
+    }
+  }
+}
 
 @Controller('matchmaking')
 export class MatchmakingController
 {
   constructor(private matchmakingService: MatchmakingService) {}
-
 
     // return active matchmaking with matchmakingId
     @Get('/matchmakingId/:matchmakingId(\\d+)')
@@ -26,16 +39,14 @@ export class MatchmakingController
     {
         return this.matchmakingService.findMatchmakingByUser(userId);
     }
-
     // return active matchmaking for user
-    @Post('/create/:userId(\\d+)/:isRanked/:isCyber')
+    @Post('/create/:userId(\\d+)/:isRanked')
     async createMatchmaking(
         @Param('userId') userId: number,
-        @Param('isRanked') isRanked: boolean,
-        @Param("isCyber") isCyber:boolean
+        @Param('isRanked', ParseBooleanPipe) isRanked: boolean,
     ): Promise<Matchmaking | undefined>
     {
-        return this.matchmakingService.createMatchmaking(userId, isRanked, isCyber);
+        return this.matchmakingService.createMatchmaking(userId, isRanked);
     }
 
     @Delete('/cancel/:userId(\\d+)')
@@ -47,14 +58,13 @@ export class MatchmakingController
     }
 
 
-    @Post('/initiateDuel/:userId(\\d+)/:targetUserId(\\d+)/:isCyber')
+    @Post('/initiateDuel/:userId(\\d+)/:targetUserId(\\d+)')
     initiateDuel(
         @Param('userId') userId: number,
         @Param('targetUserId') targetUserId: number,
-        @Param("isCyber") isCyber:boolean
     ): Promise<Matchmaking | undefined>
     {
-        return this.matchmakingService.createDuelRequest(userId, targetUserId, isCyber);
+        return this.matchmakingService.createDuelRequest(userId, targetUserId);
     }
 
     @Put('/acceptDuel/:userId(\\d+)')

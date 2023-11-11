@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException} from '@nestjs/common';
 import { UserService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-
+import { CreateUserDTO } from 'src/api/DTO/CreateUser.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +14,11 @@ export class AuthService {
   async validUserPW(mail: string, pass: string): Promise<any> {
 	console.log("[auth service validUser] function call with mail ", mail, " pass ", pass)
     const myuser =  await this.usersService.user({email: mail});
+	if (!myuser)
+	{
+		console.log("Failed to sign in because bad user")
+		return (null);
+	}
 	const mypass = await this.usersService.IdGetPass(myuser.id);
 	const ismatch = await bcrypt.compare(pass, mypass.salted_password);
 	//const ismatch = await bcrypt.compare(pass, mypass.salt, null);
@@ -22,7 +27,7 @@ export class AuthService {
 	//console.log("My user is ", myuser)
 	if (myuser && ismatch != true) {
 //	if (myuser && await this.usersService.checkuserpass(pass, myuser?.id) != true) {
-		console.log("Failed to sign in")
+		console.log("Failed to sign in because bad password")
 		return (null);
 	}
 	return myuser;
@@ -41,6 +46,30 @@ export class AuthService {
 	}
 	console.log("[auth sign in] sign in failed")
 	return ({content: "Go fuck yourself"});
+  }
+
+  async verifyAdmin(user: CreateUserDTO): Promise<boolean> {
+	const myuser = await this.usersService.user(user as any);
+	if (myuser?.admin == 1)
+		return(true);
+	console.log("[auth service verifyAdmin] user not verified as admin")
+	return (false);
+  }
+
+  async verifyadminorsame(user: CreateUserDTO, id: number): Promise<boolean> {
+	const myuser = await this.usersService.user({id: id});
+	if (myuser?.admin != 1)
+	{
+		if(myuser?.id != user.id)
+		{
+			console.log("[Auth service verifyadminorsame] different user and not admin")
+			return (false);
+		}
+		console.log("[Auth service verifyadminorsame] checked as same user")
+		return (true);
+	}
+	console.log("[Auth service verifyadminorsame] checked as admin")
+	return (true);
   }
 }
 

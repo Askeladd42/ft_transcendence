@@ -1,9 +1,9 @@
 {
-  "_hash": "klv1BLcBzZ",
+  "_hash": "ep2l6toLFa",
   "project": {
     "rootDir": "/Transcendence/frontend"
   },
   "versions": {
-    "nuxt": "3.8.0"
+    "nuxt": "3.8.1"
   }
 }

@@ -26,27 +26,27 @@
     <!-- Afficher la lsite des channels -->
     <Channel v-if="showChannelList" @close-channel-list="handleCloseChannelList" />
     <!-- Afficher le chat -->
-    <Chat :showChat="showChat" />
+    <PrivateChat v-if = "isPrivateChatOpen" @close ="isPrivateChatOpen = false" />
     <!-- Affiche la deconnexion -->
     <Logout :showlogout="showLoggedOut" :showconfirmation="showLogoutConfirmation" />
     <!-- Afficher la liste des parties -->
     <Leaderboard v-if="showLeaderboard_" @close-list="handleCloseList"/>
     <!--Affiche la liste d'amis  -->
     <FriendList v-if="isFriendListOpen" @close="isFriendListOpen = false" />
-    <!-- Afficher le jeu -->
-    <Game v-if="showGame" @quit-game="handleQuitGame" />
+    <!-- Afficher le matchmaking -->
+    <Matchmaking v-if="showMatchmaking" @cancelMatchmaking="handleCloseMatchmaking" />
+
 </div>
 <div class = "body">
       <div class="center-container">
-        <button v-if="!showGame && !showMenu && !showLeaderboard_ && !showChannelList" @click="startOrLogin" class="start-login-btn">
+        <button v-if="!showGame && !showMenu && !showLeaderboard_ && !showChannelList && !showMatchmaking" @click="startOrLogin" class="start-login-btn">
     {{ isUserLoggedIn ? 'Démarrer' : 'Connexion' }}
 </button>
   <div v-if="showMenu" class="menu-container">
-    <button @click="startGame" class="menu-btn">Partie Rapide</button>
-    <button @click="startGame" class="menu-btn">Partie Classée</button>
+    <button @click="createMatchmakingForUser(false)" class="menu-btn">Partie Rapide</button>
+    <button @click="createMatchmakingForUser(true)" class="menu-btn">Partie Classée</button>
     <button @click="showOnlineChannel" class="menu-btn">Channel</button>
     <button @click="showLeaderboard" class="menu-btn">Classement</button>
-    <button @click="startGame" class="menu-btn">Local</button>
     <button @click="showMenu = false" class="menu-btn">Options</button>
     <button @click="showMenu = false" class="menu-btn">Quitter</button>
   </div>
@@ -55,7 +55,7 @@
     </div>
     <div class="footer">
       <div class="icon-container">
-        <img v-if="!showChat" src="~/assets/icons/chat.svg" alt="Chat-Icon" class="icon-chat" @click="toggleChat" />
+        <img v-if="isUserLoggedIn && !isPrivateChatOpen" src="~/assets/icons/chat.svg" alt="Chat-Icon" class="icon-chat" @click="isPrivateChatOpen= !isPrivateChatOpen" />
       </div>
     </div>
 </div>
@@ -71,14 +71,15 @@ import Login from './auth/Login.vue';
 import Logout from './auth/Logout.vue';
 import Register from './auth/Register.vue';
 /* chat */
-import Chat from './chat/Chat.vue';
+import PrivateChat from './chat/PrivateChat.vue';
 import Channel from './chat/Channel.vue';
-/* game */
-import Game from './game/Game.vue';
+
+import Matchmaking from './game/Matchmaking.vue';
+
 /* user */
 import Profile from './user/Profile.vue';
 import Leaderboard from './user/Leaderboard.vue';
-import FriendList from './user/FriendList.vue';
+import FriendList from './user/Relations.vue';
 import { useCookies } from "vue3-cookies"; // cookies
 
 export default {
@@ -88,7 +89,6 @@ export default {
       /*  show */
       showProfilePage: false,
       showProfile: false,
-      showChat: false,
       showProfileIcon: false,
       showGame: false,
       showLogoutConfirmation: false,
@@ -97,38 +97,33 @@ export default {
       showMenu: false,
       showLeaderboard_: false,
       showChannelList: false,
+      showMatchmaking: false,
 
       isLoginOpen: false, //login
       isRegisterOpen : false, //register
-      isFriendListOpen: false, //friendlist
+      isFriendListOpen: false, //relation list : friendlist, invitation list, waiting list, blocked list
       isUserLoggedIn: false,
+      isPrivateChatOpen: false,
 
     };
   },
   setup() {
     const { cookies } = useCookies();
     return { cookies };
-    },
-    mounted() {
-      this.checkLoginStatus();
-    // const authToken = this.cookies.get("authToken");
-    
-    // if (authToken) {
-    //   this.isUserLoggedIn = true;
-    // } else {
-    //   this.isUserLoggedIn = false;
-    // }
+  },
+  mounted() {
+    this.checkLoginStatus();
   },
   components : {
-    Game,
     Leaderboard,
     Register,
     Login,
     Logout,
-    Chat,
+    PrivateChat,
     Profile,
     Channel,
     FriendList,
+    Matchmaking,
   },
   methods: {
     checkLoginStatus() {
@@ -161,7 +156,6 @@ export default {
       this.showMenu = false;
       this.showGame = true;
     },
-
     handleUserLoggedIn(isLoggedIn) {
       this.isUserLoggedIn = isLoggedIn;
     },
@@ -171,6 +165,10 @@ export default {
     },
     handleCloseChannelList() {
       this.showChannelList = false;
+      this.showMenu = true;
+    },
+    handleCloseMatchmaking() {
+      this.showMatchmaking = false;
       this.showMenu = true;
     },
     handleQuitGame() {
@@ -185,6 +183,31 @@ export default {
         this.showChannelList = true; // Affiche la liste des parties en ligne
         this.showMenu = false; // Cache le menu
       },
+      async createMatchmakingForUser(isRanked) {
+      const userId = this.cookies.get("userId"); 
+      const token = this.cookies.get('authToken'); // get le token dans les cookies
+      const baseUrl = `http://${window.location.hostname}`;
+      try {
+        const response = await fetch(`${baseUrl}:2000/matchmaking/create/${userId}/${isRanked}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Erreur lors de la création du matchmaking');
+        }
+        this.showMatchmaking = true;
+        this.showMenu = false;
+        // console.log('Matchmaking créé avec succès');
+        return await response.json();
+      } catch (error) {
+        // console.log(userId);
+        // console.log(token);
+        console.log('Erreur lors de la création du matchmaking pour l’utilisateur :', error);
+      }
+    },
   },
 };
 </script>

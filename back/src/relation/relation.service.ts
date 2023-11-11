@@ -53,6 +53,17 @@ export class RelationService
         return this.blocked.filter((blocked) => blocked.userId1 == Number(userId));
     }
 
+    findMyBlockedIdOnly(userId: number): number[]
+    {
+        const allMyBlocked: Blocked[] = this.findMyBlocked(userId);
+        let allMyBlockedId = [];
+
+        for (let blocked of allMyBlocked)
+            allMyBlockedId.push(blocked.userId2)
+
+        return allMyBlockedId;
+    }
+
     // return a blocked Object (is the relation userId && userIdIsBlock exist in blocked) or undefined
     findIfuserBlocked(userId: number, userIdIsBlock: number): Blocked | undefined
     {
@@ -136,16 +147,64 @@ export class RelationService
             friend.userId2 == Number(userId)) && friend.accepted == true);
     }
 
+    findMyFriendIdOnly(userId: number): number[]
+    {
+        const allMyFriend: Friend[] = this.findMyFriend(userId);
+        let allMyFriendId = [];
+
+        for (let friend of allMyFriend)
+        {
+            if (friend.userId1 != userId)
+                allMyFriendId.push(friend.userId1)
+            else
+                allMyFriendId.push(friend.userId2)
+        }
+
+        return allMyFriendId;
+    }
+
     // return all friend pending request (userId2 = userId && accepted = false)
     findMyPendingRequests(userId: number): Friend[]
     {
         return this.friend.filter((friend) => friend.userId2 == Number(userId) && friend.accepted == false);
+    }
+    
+    findMyPendingRequestsIdOnly(userId: number): number[]
+    {
+        const allMyFriendPendingRequests: Friend[] = this.findMyPendingRequests(userId);
+        let allMyFriendPendingRequestsId = [];
+
+        for (let friendPendingRequest of allMyFriendPendingRequests)
+        {
+            if (friendPendingRequest.userId1 != userId)
+                allMyFriendPendingRequestsId.push(friendPendingRequest.userId1)
+            else
+                allMyFriendPendingRequestsId.push(friendPendingRequest.userId2)
+        }
+
+        return allMyFriendPendingRequestsId;
     }
 
     // return all friend emmited request (userId1 = userId && accepted = false)
     findMyEmmitedRequest(userId: number): Friend[]
     {
         return this.friend.filter((friend) => friend.userId1 == Number(userId) && friend.accepted == false);
+    }
+
+    findMyEmmitedRequestIdOnly(userId: number): number[]
+    {
+        const allMyEmmitedRequest: Friend[] = this.findMyEmmitedRequest(userId);
+        let allMyEmmitedRequestId = [];
+
+        for (let friendEmmitedRequest of allMyEmmitedRequest)
+        {
+            if (friendEmmitedRequest.userId1 != userId)
+                allMyEmmitedRequestId.push(friendEmmitedRequest.userId1)
+            else
+                allMyEmmitedRequestId.push(friendEmmitedRequest.userId2)
+        }
+
+        return allMyEmmitedRequestId;
     }
 
     // return a friend Object (is the relation userId && userIdIsBlock exist in friend) or undefined

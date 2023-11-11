@@ -32,19 +32,38 @@ export class GameController
     return this.gameService.findById(id);
   }
 
-  // will update the position of the player on a game 
-  @Put('/actGame/:id/:userId/:playerPosY')
-  async update(
+  // will update the position of the player on a game (go up)
+  @Put('/playerGoUp/:id(\\d+)/:userId(\\d+)')
+  async playerGoUp(
     @Param('id') id: number, 
-    @Param('userId') userId: number, 
-    @Param('playerPosY') playerPosY: number
+    @Param('userId') userId: number
   )
   {
-    this.gameService.updatePlayerPos(id, userId, playerPosY);
+    this.gameService.updatePlayerDirection(id, userId, -1);
+  }
+
+  // will update the position of the player on a game (go down)
+  @Put('/playerGoDown/:id(\\d+)/:userId(\\d+)')
+  async playerGoDown(
+    @Param('id') id: number, 
+    @Param('userId') userId: number
+  )
+  {
+    this.gameService.updatePlayerDirection(id, userId, 1);
+  }
+
+  // will update the position of the player on a game (stop movement)
+  @Put('/playerStopMoving/:id(\\d+)/:userId(\\d+)')
+  async playerStopMoving(
+    @Param('id') id: number, 
+    @Param('userId') userId: number
+  )
+  {
+    this.gameService.updatePlayerDirection(id, userId, 0);
   }
 
   // will update the position of the player on a game 
-  @Put('/sandevistanSmash/:id/:userId/')
+  @Put('/sandevistanSmash/:id(\\d+)/:userId(\\d+)/')
   async sandevistanSmash(
     @Param('id') id: number, 
     @Param('userId') userId: number, 
@@ -54,7 +73,7 @@ export class GameController
   }
 
   // will update the position of the player on a game 
-  @Put('/sandevistanGuard/:id/:userId/')
+  @Put('/sandevistanGuard/:id(\\d+)/:userId(\\d+)/')
   async sandevistanGuard(
     @Param('id') id: number, 
     @Param('userId') userId: number, 

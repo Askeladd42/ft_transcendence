@@ -1,70 +1,102 @@
-<!-- <template>
-	<div>
-	  <div class="matchmaking">
-		<h2>Joueurs disponibles</h2>
-		<ul>
-		  <li v-for="player in availablePlayers" :key="player.id">
-			{{ player.name }}
-			<button @click="addPlayerToGame(player)">Rejoindre la partie non classée</button>
-		  </li>
-		</ul>
-	  </div>
-	  <div class="game">
-		<h2>Joueurs sélectionnés</h2>
-		<ul>
-		  <li v-for="player in selectedPlayers" :key="player.id">
-			{{ player.name }}
-			<button @click="removePlayerFromGame(player)">Quitter le matchmaking</button>
-		  </li>
-		</ul>
-		<button @click="startGame">Lancer la partie</button>
-	  </div>
-	  <div class="result">
-		<h2>Résultat de la partie</h2>
-		<p>{{ gameResult }}</p>
-	  </div>
+<!-- Matchmaking.vue -->
+<template>
+	<div v-if="searching && !showGame" class="matchmaking-container">
+    <h1>Matchmaking</h1>
+		<p>Recherche en cours...</p>
+		<button v-if="!showGame" @click="cancelMatchmakingForUser">Annuler</button>
 	</div>
+  <Game v-if="showGame"/>
   </template>
   
   <script>
-  import axios from 'axios';		// à adapter en fonction du fetch de l'API
-  import Home from './Home.vue';
-  
+  import Game from './Game.vue';
+  import { useCookies } from "vue3-cookies"; // cookies
+
   export default {
 	name: 'Matchmaking',
-	components: {
-	  Home,
-	},
 	data() {
 	  return {
-		availablePlayers: [],
-		selectedPlayers: [],
-		gameResult: '',
+    searching: true,
+    showGame: false,
 	  };
 	},
-	mounted() {
-	  this.getAvailablePlayers();
-	},
+	setup() {
+    const { cookies } = useCookies();
+    return { cookies };
+    },
+    mounted() {
+    this.loopMatchmaking();
+  },
 	methods: {
-	  getAvailablePlayers() {
-		const response = fetch('http://localhost:2000/api/user'), {
-		  method: GET,
-		  },
-		}
-	  },
-	  addPlayerToGame(player) {
-		this.selectedPlayers.push(player);
-		this.availablePlayers = this.availablePlayers.filter((p) => p.id !== player.id);
-	  },
-	  removePlayerFromGame(player) {
-		this.availablePlayers.push(player);
-		this.selectedPlayers = this.selectedPlayers.filter((p) => p.id !== player.id);
-	  },
-	  startGame() {
-		axios.post('/api/game', this.selectedPlayers).then((response) => {
-		  this.gameResult = response.data.result;
-		});
-	  },
-	},
+    async loopMatchmaking() {
+    const userId = this.cookies.get("userId"); 
+    const token = this.cookies.get('authToken'); // get the token from the cookies
+    const baseUrl = `http://${window.location.hostname}`;
+    this.intervalId = setInterval(async () => {
+      try {
+        const response = await fetch(`${baseUrl}:2000/matchmaking/userId/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Error getting matchmaking');
+        }
+        const m = await response.json();
+        if (m) {
+          if (!m.isDuel && m.idGameLinked > 0) {
+            this.cookies.set("gameId", m.idGameLinked);
+            this.showGame = true;
+            clearInterval(this.intervalId);
+          }
+        } else {
+          console.log('ERROR');
+        }
+      } catch (error) {
+        console.log('Error in loopMatchmaking:', error);
+        clearInterval(this.intervalId);
+      }
+    }, 100);
+  },
+  stopLoop() {
+    clearInterval(this.intervalId);
+  },
+  async cancelMatchmakingForUser(userId) {
+  userId = this.cookies.get("userId"); 
+  const token = this.cookies.get('authToken'); // get le token dans les cookies
+  const baseUrl = `http://${window.location.hostname}`;
+  try {
+    const response = await fetch(`${baseUrl}:2000/matchmaking/cancel/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors de l’annulation du matchmaking');
+    }
+
+    const result = await response.json();
+
+    if(result == false) {
+      console.log('Le matchmaking n’a pas pu être annulé');
+    }
+    else
+    {
+      this.searching = false;
+      this.$emit('cancelMatchmaking');
+      console.log('Matchmaking annulé avec succès');
+      // stop loop
+      return await response.json();
+    }
+  } catch (error) {
+    // console.log(userId);
+    // console.log(token);
+    // console.log('Erreur lors de l’annulation du matchmaking pour l’utilisateur :', error);
+  }
+  },
+  },
   };
-  </script> -->
+  </script>
+  <style>@import '~/assets/css/matchmaking.css';</style>

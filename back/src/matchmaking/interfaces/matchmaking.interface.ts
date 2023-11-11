@@ -3,8 +3,8 @@ export interface Matchmaking
     id: number; // id matchmaking
     userId: number; // id user
     userElo: number; // helo of the user
+    userOldElo: number; // helo of the user
     isRanked: boolean; // is the game searched is a ranked
-    isCyber: boolean; // are powerups active
     date: Date; // date of the start of the matchmaking
     isDuel; // if the matchmaking is a duel
     isDuelAccepted: boolean; // if the duel is accepted

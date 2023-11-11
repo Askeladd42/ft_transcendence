@@ -144,7 +144,7 @@
     padding: 5px 20px;
   }
   .custom-modal-body input[type="email"],
-  .custom-modal-body input[type="password"], .custom-modal-body input[type="name"], .custom-modal-body input[type="nickname"],.custom-modal-body input[type="surname"]{
+  .custom-modal-body input[type="password"], .custom-modal-body input[type="nickname"]{
     background-color: #0d0d14;
     border: 1px solid #9f00c5;
     color: #a8a8b3;
@@ -246,7 +246,10 @@
 .menu-btn:first-child {
   margin-top: 0;
 }
-
+.errors {
+  color:red;
+  font-size: 12px;
+}
 /* Pour la réactivité, si les boutons sont trop serrés sur mobile */
 @media (max-width: 600px) {
   .menu-btn {

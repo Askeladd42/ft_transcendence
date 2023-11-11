@@ -12,7 +12,7 @@ model User {
   name                        String?
   surname                     String?
   nickname                    String?
-  email                       String @unique
+  email                       String? @unique
   admin                       Int @default(0)
   password                    Pass?
   // lastConnection             DateTime @default(now())
@@ -38,8 +38,8 @@ model Pass {
   id                         Int     @unique
   salted_password            String?
   salt                       String?
-  // oAuth42Link                String// check OAuth42 ???
-  // googleAuthLink             String// check GoogleAuth ???
+  oAuth42Link                String?// check OAuth42 ???
+  googleAuthLink             String?// check GoogleAuth ???
 }
 
 // model OAuth42 {
@@ -84,7 +84,6 @@ model Game {
   // // gameMap             GameMap @relation(fields: [match_gameMapId], references: [gameMap_id])
   // // gameMapId           Int
   isRanked                  Boolean @default(false)
-  isCyber                   Boolean @default(true)
   scoreUser1                Int @default(0)
   scoreUser2                Int @default(0)
   isOver                    Boolean @default(false)

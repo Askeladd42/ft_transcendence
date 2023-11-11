@@ -20,6 +20,7 @@
     "canvas": "^2.11.2",
     "cookie-universal-nuxt": "^2.2.2",
     "konva": "^9.2.2",
-    "vue3-cookies": "^1.0.6"
+    "vue3-cookies": "^1.0.6",
+    "vuetify": "^3.3.23"
   }
 }

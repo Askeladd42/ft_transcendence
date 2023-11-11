@@ -103,30 +103,12 @@ export default {
  },
  methods: {
 
-  async getCurrentUserEmail() {
-    const token = this.cookies.get('authToken');
-  try {
-    const response = await fetch('http://localhost:2000/api/user', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) throw new Error('Impossible de récupérer les informations de l’utilisateur.');
-
-    const data = await response.json();
-    this.currentUserEmail = data.email; // Stocke l'e-mail dans une variable pour une utilisation ultérieure
-  } catch (error) {
-    console.error(error);
-    alert(error.message);
-  }
-},
-
   async submitProfile() {
   const token = this.cookies.get('authToken');
+  const userId = +this.cookies.get('userId');
+  const baseUrl = `http://${window.location.hostname}`;
+  
   const formData = new FormData(document.querySelector('#profile'));
-  await this.getCurrentUserEmail();
 
   try {
     if (this.showEmailChange) {
@@ -138,13 +120,13 @@ export default {
         return;
       }
 
-      const emailUpdateResponse = await fetch('http://localhost:2000/api/chemail', {
+      const emailUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: this.currentUserEmail, newemail: email })
+        body: JSON.stringify({id: userId, email: email })
       });
 
       if (!emailUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour de l’e-mail');
@@ -158,38 +140,54 @@ export default {
         alert('Les mots de passe ne correspondent pas.');
         return;
       }
-
       // Génération du mot de passe haché
       const saltRounds = 10;
       const salt = bcrypt.genSaltSync(saltRounds);
       const hashedPassword = bcrypt.hashSync(password, salt);
 
-      const passwordUpdateResponse = await fetch('http://localhost:2000/api/chpassword', {
+      const passwordUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: this.currentUserEmail, newpass: hashedPassword, newsalt: salt })
+        body: JSON.stringify({ id: userId, password: password})
       });
 
       if (!passwordUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour du mot de passe');
     }
 
     if (this.showNicknameChange) {
-      const nickname = formData.get('nickname');
+    const nickname = formData.get('nickname');
+    const nicknameUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id: userId, nickname: nickname }) // Update the payload to match CreateUserDTO expected on the server
+    });
 
-      const nicknameUpdateResponse = await fetch('http://localhost:2000/api/chusername', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email: this.currentUserEmail, newname: nickname })
-      });
-
-      if (!nicknameUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour du nom d’utilisateur');
+    if (!nicknameUpdateResponse.ok) {
+      const errorData = await nicknameUpdateResponse.json();
+      throw new Error(errorData.message || 'Erreur lors de la mise à jour du nom d’utilisateur');
     }
+  }
+    // champ pour mettre à jour sa photo d'avatar
+    // if (this.showAvatarChange) {
+      // const avatar = formData.get('avatar');
+
+      // const avatarUpdateResponse = await fetch('http://localhost:2000/api/chavatar', {
+        // method: 'PUT',
+        // headers: {
+          // 'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${token}`,
+        // },
+        // body: JSON.stringify({ email: this.currentUserEmail, avatar: avatar })
+      // });
+
+      // if (!avatarUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour de la photo d\'avatar');
+    // }
 
     alert('Profil mis à jour avec succès');
   } catch (error) {

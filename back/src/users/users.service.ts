@@ -100,7 +100,7 @@ export class UserService {
       where,
     });
   }
-
+//
   async deleteUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
     return this.prisma.user.delete({
       where,
@@ -168,5 +168,14 @@ export class UserService {
 	}
 	return false;
 	console.log("gottem");
+  }
+
+  async check2fa(id :Number): Promise<Boolean> {
+	const MyPass = await this.IdGetPass(id)
+	if (MyPass?.googleAuthLink != null)
+	{
+		return true
+	}
+	return false
   }
 }

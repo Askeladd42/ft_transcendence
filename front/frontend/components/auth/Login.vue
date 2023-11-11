@@ -67,7 +67,8 @@ export default {
         const formData = new FormData(document.querySelector('#login'));
         const email = formData.get('email');
         const password = formData.get('password');
-        const response = await fetch('http://localhost:2000/auth/login', {
+        const baseUrl = `http://${window.location.hostname}`;
+        const response = await fetch(`${baseUrl}:2000/auth/login`, {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -83,12 +84,17 @@ export default {
             this.isLoggedSuccessfully = true;
             this.isLoggedFailed = false;
             const data = await response.json();
+            const expirationDate = new Date();
+            expirationDate.setHours(expirationDate.getHours() + 1); // Creation d'une date d'expiration pour le cookie
+           
             // token
             const authToken = data.access_token;
-            this.cookies.set("authToken", authToken);
+            this.cookies.set("authToken", authToken, { expires: expirationDate }); // Stocker le token dans un cookie + ajout d'une date d'expiration
             //id
-            const userId = data.id;
-            this.cookies.set("userId", userId); // Stocker l'ID utilisateur dans les cookies
+            if (!this.cookies.get("userId")) {
+              const userId = data.id;
+              this.cookies.set("userId", userId, { expires: expirationDate });
+            }
             console.log(authToken);
             console.log(userId);
         }
