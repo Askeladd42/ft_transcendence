@@ -8,9 +8,10 @@
           <div v-show="currentIndex === 0">  
             <ul class="user-list-content">
               <li v-for="friend in friendList" :key="friend" class="user-item">
-                <!-- <v-img :src="friend.img"></v-img> -->
-                {{ friend }}
-                <button @click="deleteFriend(friend)" class="remove-user-btn">✖</button> <!-- on remplacera par async deleteFriend -->
+                <span class ="friend-btn">{{ friend }}
+                  <img src="~/assets/icons/chat.svg" class="icon-friend chat-icon" @click="chatWithFriend(friend)">
+                <img src="~/assets/icons/cross.svg" class="icon-friend delete-icon" @click="deleteFriend(friend)">
+              </span>
               </li>
             </ul>
             <div class="add-friend">
@@ -61,10 +62,13 @@
         </v-tab-item>
       </v-tabs>
     </div>
+    <!-- <PrivateChat :friendFromRelation="selectedFriend" /> -->
+
   </template>
   
   <script>
   import { useCookies } from "vue3-cookies"; // cookies
+  import PrivateChat from "../chat/PrivateChat.vue"; // chat
   export default {
     data() {
       return {
@@ -75,6 +79,7 @@
           {name: 'En attente', icon: '⏳'},
           {name: 'Bloqués', icon: '🚫'}
         ],
+        selectedFriend: null,
         newFriend: '', // utilisé pour la liaison de données avec le champ d'entrée
         isRelationListOpen: true, // Variable de contrôle pour l'affichage de la liste d'amis
         isFriendListOpen: true, // Variable de contrôle pour l'affichage de la liste d'amis
@@ -101,6 +106,9 @@
         });
         return state;
     },
+    components: {
+      PrivateChat,
+    },
     mounted () {
       this.startLoop();
     // this.getUser("B");
@@ -108,6 +116,9 @@
     // this.deleteBlockedUser("B");
     },
     methods: {
+      chatWithFriend(friend) {
+      this.selectedFriend = friend;
+      },
       async getUserById (id){
         const baseUrl = `http://${window.location.hostname}`;
         const response = await fetch(`${baseUrl}:2000/api/user/id/${id}`, {
@@ -152,18 +163,20 @@
             },
           });
           this.friendList = [];
+          
           this.friendListId = await response.json();
           for (let i = 0; i < this.friendListId.length; i++)
           {
             var temp = await this.getUserById(this.friendListId[i]);
-            this.friendList.push(temp);
-            
+            if (temp != this.friendList[i])
+              this.friendList.push(temp);
           }
           console.log(this.friendListId);
           // console.log(this.friendlist);
         } catch (error) {
           console.error('Erreur lors de la récupération de la liste d\'amis:', error);
         }
+        console.log(this.friendList);
       },
 
       async getSendingList() { // invitation envoyée
@@ -332,6 +345,14 @@
               'Authorization': `Bearer ${this.token}`,
             },
           });
+          for (let i = 0; i < this.friendListId.length; i++)
+          {
+            if (this.friendListId[i] == idtofind)
+            {
+              this.friendListId.splice(i, 1);
+              this.friendList.splice(i, 1);
+            }
+          }
         }
       } catch (error) {
           console.error('Erreur lors de la suppression de l\'utilisateur en ami:', error);
@@ -351,7 +372,7 @@
 
       startLoop() {
         this.refreshLists(); // Appel initial
-        setInterval(this.refreshLists, 5000); // Exécutez la boucle toutes les 5 secondes
+        setInterval(this.refreshLists, 7500); // Exécutez la boucle toutes les 5 secondes
       },
 
       showList() {

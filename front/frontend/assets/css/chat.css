@@ -77,3 +77,45 @@
     color: #fff;
     cursor: pointer;
 }
+.pm-btn {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Orbitron', sans-serif;
+    outline: none;
+}
+.pm-chat {
+    border-right: #9f00c5 2px solid;
+    width :20%;
+}
+.message-date {
+    font-size: 12px;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    text-align: left;
+}
+.chat-body {
+    display: flex;
+}
+.my-message {
+    color: white;
+}
+
+.other-message {
+    color: #0affd1;
+}
+.icon {
+    display: none;
+    width:10px;
+    height: 10px;
+    filter: brightness(0) invert(1);
+    transition: filter 0.3s ease;
+}
+.icon:hover {
+   cursor: pointer;
+}
+.my-message:hover .icon {
+    display: inline;
+}
