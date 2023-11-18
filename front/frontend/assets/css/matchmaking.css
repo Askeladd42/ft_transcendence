@@ -29,6 +29,17 @@
     width: 100%; /* Bouton de largeur complète */
     box-sizing: border-box; /* S'assurer que le padding ne change pas la largeur */
   }
+
+  .matchmaking-loading{
+    width: 100px;
+    height: 100px;
+    position: relative;
+    margin: auto;
+  }
+
+  path {
+    background-color: #a600e6;
+  }
   
   .matchmaking-container button:hover {
     background-color: #a600e6; /* Une couleur légèrement différente au survol */

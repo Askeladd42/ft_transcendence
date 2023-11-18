@@ -28,22 +28,22 @@ export default {
       this.$emit('close-list');
     },
     async fetchLeaderboard() {
-    try {
-      // Utilisez cette ligne si vous avez besoin de l'URL de base, sinon supprimez-la
-      const baseUrl = `http://${window.location.hostname}`;
-      const response = await fetch(`${baseUrl}:2000/api/leaderboard`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des données');
+      try {
+        // Utilisez cette ligne si vous avez besoin de l'URL de base, sinon supprimez-la
+        const baseUrl = `http://${window.location.hostname}`;
+        const response = await fetch(`${baseUrl}:2000/api/leaderboard`);
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des données');
+        }
+        this.players = await response.json();
+      } catch (error) {
+        console.error('Erreur lors de la récupération du classement:', error);
       }
-      this.players = await response.json();
-    } catch (error) {
-      console.error('Erreur lors de la récupération du classement:', error);
-    }
-  },
+    },
   },
 };
 </script>
 
 <style>
-  @import '~/assets/css/leaderboard.css';
+@import '~/assets/css/leaderboard.css';
 </style>

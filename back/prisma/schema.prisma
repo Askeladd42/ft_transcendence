@@ -17,10 +17,7 @@ model User {
   password                    Pass?
   // lastConnection             DateTime @default(now())
   pathAvatar                 String @default("avatar/default_avatar.png") //should be stored to avatar/*user_id* 
-  // is_connected               Boolean @default(true)
   elo                       	Int @default(1000)
-  // division                   Division @relation(fields: [user_divisionId], references: [division_id])
-  // divisionId                 Int @default(0)
   player1Matches              Game[] @relation("player1")
   player2Matches              Game[] @relation("player2")
   channelsMessages            ChannelMessage[]
@@ -31,6 +28,7 @@ model User {
   Friend2                     Friend[] @relation("user2")
   Blocked1                    Blocked[] @relation("user1")
   Blocked2                    Blocked[] @relation("user2")
+  Archivement                 ArchivementDone[] @relation("user")
 }
 
 model Pass {
@@ -41,14 +39,6 @@ model Pass {
   oAuth42Link                String?// check OAuth42 ???
   googleAuthLink             String?// check GoogleAuth ???
 }
-
-// model OAuth42 {
-
-// }
-
-// model GoogleAuth {
-
-// }
 
 model Channel {
   id                      Int @unique @id @default(autoincrement())
@@ -62,17 +52,12 @@ model Channel {
   isMemberOf              IsMemberOf[]
 }
 
-model Division {
-  id                     Int @unique @id @default(autoincrement())
-  name                   String
-  pathImg                String
-}
-
 model Archivement {
   id                  Int @unique @id @default(autoincrement())
   name                String
   description         String?
   pathImg             String
+  Users               ArchivementDone[] @relation("archivement") 
 }
 
 model Game {
@@ -81,21 +66,12 @@ model Game {
   userId1                   Int
   user2                     User @relation(fields: [userId2], references: [id], name: "player2")
   userId2                   Int
-  // // gameMap             GameMap @relation(fields: [match_gameMapId], references: [gameMap_id])
-  // // gameMapId           Int
   isRanked                  Boolean @default(false)
   scoreUser1                Int @default(0)
   scoreUser2                Int @default(0)
   isOver                    Boolean @default(false)
   date                      DateTime @default(now())
 }
-
-// // model GameMap {
-// //   id                      Int @unique @id @default(autoincrement())
-// //   name                    String
-// //   pathFile                String
-// //   description             String
-// // }
 
 model Friend {
   user1                    User @relation(fields: [userId1], references: [id], name: "user1")
@@ -157,12 +133,12 @@ model PrivateMessage {
   @@unique([userId1, userId2, date])
 }
 
-// model ArchivementDone {
-//   user            User @relation(fields: [userId], references: [user_id])
-//   userId          Int
-//   archivement     User @relation(fields: [userId], references: [user_id])
-//   archivementId   Int
-//   date            DateTime @default(now())
+model ArchivementDone {
+  user            User @relation(fields: [userId], references: [id], name: "user")
+  userId          Int
+  archivement     Archivement @relation(fields: [archivementId], references: [id], name: "archivement")
+  archivementId   Int
+  date            DateTime @default(now())
 
-//   @@unique([userId, archivementId])
-// }
+  @@unique([userId, archivementId])
+}

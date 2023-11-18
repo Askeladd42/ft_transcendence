@@ -146,13 +146,92 @@
   display: flex;
   justify-content: flex-start;
   width : 500px;
+  margin-top : 5px;
 }
 
-.powerup-bar, .powerup-bar2 {
-  background-image: linear-gradient(to bottom, #9f00c5 0%, #0affd1 100%);
+.powerup-bar1, .powerup-bar2 {
+  background-image: linear-gradient(to bottom, #3838381c 0%, #8585851c 100%);
   box-shadow: 0 0 10px rgba(255, 32, 121, 0.6);
   border-radius: 5px;
   height: 20px;
-  transition: width 0.5s ease;
-  margin-right: 10px; /* Ajouter un espace entre les barres */
+  width: 45%;
+}
+
+.powerup-bar1 {
+  margin-right: 5%;
+  background-image: linear-gradient(to right, #9f00c5 0%, #0affd1 100%);
+}
+
+.powerup-bar2 {
+  margin-left: 5%;
+  background-image: linear-gradient(to left, #9f00c5 0%, #0affd1 100%);
+}
+
+.powerup-bar1-filling, .powerup-bar2-filling {
+  height: 100%;
+  position:relative;
+  border-radius: 5px;
+  background-image: linear-gradient(to bottom, #383838 0%, #858585 100%);
+}
+
+.powerup-p1-icon-container, .powerup-p2-icon-container {
+  display: flex;
+}
+
+.cooldownEffects {
+  background-image: linear-gradient(to bottom, #383838bb 0%, #383838bb 100%);
+  width: 50px;
+  height: 50px;
+}
+
+.cooldownTimer {
+  color: #000000;
+  font-size: 20px;
+  font-weight: bold;
+  padding-top: 13px;
+  text-align: center;
+}
+
+.sandevistanSmash1On, .sandevistanSmash1Off, .sandevistanSmash2On, .sandevistanSmash2Off,
+.sandevistanGuard1On, .sandevistanGuard1Off, .sandevistanGuard2On, .sandevistanGuard2Off {
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 50px;
+  height: 50px;
+  margin-top: 5px;
+}
+
+.sandevistanSmash1On, .sandevistanSmash1Off, .sandevistanSmash2On, .sandevistanSmash2Off {
+  background-image: url('~/assets/icons/sandevistanSmash.png');
+}
+
+
+.sandevistanGuard1On, .sandevistanGuard1Off, .sandevistanGuard2On, .sandevistanGuard2Off {
+  background-image: url('~/assets/icons/sandevistanGuard.png');
+}
+
+.sandevistanSmash1On, .sandevistanSmash2On, .sandevistanGuard1On, .sandevistanGuard2On {
+  box-shadow: 0px 0px 12px rgba(159, 0, 197, 0.5);
+}
+
+.sandevistanSmash1On, .sandevistanSmash1Off {
+  margin-left: 5px;
+}
+
+.sandevistanSmash2On, .sandevistanSmash2Off {
+  margin-left: 5px;
+}
+
+.sandevistanGuard1On, .sandevistanGuard1Off {
+  margin-left: 5px;
+}
+
+.sandevistanGuard2On, .sandevistanGuard2Off {
+  margin-left: 5px;
+}
+
+.player-nickname {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }

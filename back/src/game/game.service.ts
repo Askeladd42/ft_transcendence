@@ -8,7 +8,7 @@ export class GameService
 {
   private game: Game[] = [];
 
-  private timeRemainingInit: number = 30;
+  private timeRemainingInit: number = 120;
   private timeBeforeStart: number = 5;
   private speedBallInit: number = 1;
   private speedBallHitPlayerModificator: number = 1.1;
@@ -26,8 +26,9 @@ export class GameService
 
   constructor(private prisma: PrismaService)
   {
-    // this.prisma.game.deleteMany({where: {isOver: Boolean(false),},}); do not work but do something like this 
-
+    let yeet = this.prisma.game.deleteMany({where: {isOver: Boolean(false)}});
+    console.log(yeet.then((value) => {console.log(value)})); 
+  
     setInterval(() =>
     {
       const now = new Date()
@@ -44,11 +45,16 @@ export class GameService
         console.log("          player cooldown  : [", this.game[i].player1_powerUpCooldown.toFixed(2), ",", this.game[i].player2_powerUpCooldown.toFixed(2), "]");
         console.log("          pos ball         : [", this.game[i].ball_posX.toFixed(3), ",", this.game[i].ball_posY.toFixed(3), "]");
         console.log("          direction in rds :", this.game[i].ball_direction);
+        console.log("          direction in rds%:", this.game[i].ball_direction % 2);
+        let radiantOntwo: number = this.game[i].ball_direction % 2;
+        while (radiantOntwo < 0)
+          radiantOntwo += 2;
+        console.log("          direction in rds@:", radiantOntwo);
         console.log("          speed            :", this.game[i].ball_speed);
-        console.log("          PowerUp 1 smash  :", this.game[i].player1_powerUpSandevistanSmash, "/", this.game[i].player1_powerUpSandevistanSmashActive);
-        console.log("          PowerUp 1 guard  :", this.game[i].player1_powerUpSandevistanGuard, "/", this.game[i].player1_powerUpSandevistanGuardActive);
-        console.log("          PowerUp 2_smash  :", this.game[i].player2_powerUpSandevistanSmash, "/", this.game[i].player2_powerUpSandevistanSmashActive);
-        console.log("          PowerUp 2 guard  :", this.game[i].player2_powerUpSandevistanGuard, "/", this.game[i].player2_powerUpSandevistanGuardActive);
+        console.log("          PowerUp 1 smash  :", this.game[i].player1_powerUpSandevistanSmash, "-->", this.game[i].player1_powerUpSandevistanSmashActive);
+        console.log("          PowerUp 1 guard  :", this.game[i].player1_powerUpSandevistanGuard, "-->", this.game[i].player1_powerUpSandevistanGuardActive);
+        console.log("          PowerUp 2 smash  :", this.game[i].player2_powerUpSandevistanSmash, "-->", this.game[i].player2_powerUpSandevistanSmashActive);
+        console.log("          PowerUp 2 guard  :", this.game[i].player2_powerUpSandevistanGuard, "-->", this.game[i].player2_powerUpSandevistanGuardActive);
         if (this.game[i].isOver)
           this.remove(this.game[i].id);
         else
@@ -188,7 +194,7 @@ export class GameService
   sandevistanSmash(gameId:number, userId: number)
   {
     const gameToUpdate = this.game.find((game) => game.id == gameId);
-    if (gameToUpdate && !gameToUpdate.isOver)
+    if (gameToUpdate && !gameToUpdate.isOver && gameToUpdate.isRanked == true)
     {
       if (gameToUpdate.userId1 == userId &&
         gameToUpdate.player1_powerUpCooldown == 0 &&
@@ -214,7 +220,7 @@ export class GameService
   sandevistanGuard(gameId:number, userId: number)
   {
     const gameToUpdate = this.game.find((game) => game.id == gameId);
-    if (gameToUpdate && !gameToUpdate.isOver)
+    if (gameToUpdate && !gameToUpdate.isOver && gameToUpdate.isRanked == true)
     {
       if (gameToUpdate.userId1 == userId &&
         gameToUpdate.player1_powerUpCooldown == 0 &&
@@ -232,7 +238,7 @@ export class GameService
       {
         gameToUpdate.player2_powerUpSandevistanGuard = true;
         gameToUpdate.player2_powerUpCooldown = this.powerUpCooldownAfterUser;
-        gameToUpdate.player1_power -= this.powerUpNeededForSandevistanGuard;
+        gameToUpdate.player2_power -= this.powerUpNeededForSandevistanGuard;
       }
     } 
   }
@@ -256,9 +262,9 @@ export class GameService
     let randomRadiant: number;
 
     if (randomDirection == 0)
-        randomRadiant = (-0.25 + (randomAngle / 1000)) * Math.PI;
+        randomRadiant = (-0.25 + (randomAngle / 1000));
     else
-        randomRadiant = (-0.75 - (randomAngle / 1000)) * Math.PI;
+        randomRadiant = (-0.75 - (randomAngle / 1000));
 
     const newGamePrisma = await this.prisma.game.create(
     {
@@ -307,10 +313,6 @@ export class GameService
     }
     this.game.push(newGame);
 
-    // console.log("isRanked On Args    :", isRanked);
-    // console.log("isRanked On Prisma  :", newGamePrisma.isRanked);
-    // console.log("isRanked On File    :", newGame.isRanked);
-
     return newGame.id;
   }
 
@@ -342,9 +344,10 @@ export class GameService
       this.endGame(gameToUpdate);
     else
     {
+      if (gameToUpdate.isRanked == true)
+        this.updatePlayerPowerAndCooldown(gameToUpdate, elapsedMs);
       this.updatePlayerPosition(gameToUpdate, elapsedMs);
-      this.updatePlayerPowerAndCooldown(gameToUpdate, elapsedMs);
-      this.updateBallPositionBall(gameToUpdate, elapsedMs);
+      this.updatePositionBall(gameToUpdate, elapsedMs);
       this.manageWallCollisionX(gameToUpdate, elapsedMs);
       this.manageWallCollisionY(gameToUpdate);
     }
@@ -375,12 +378,12 @@ export class GameService
 
   private updatePlayerPosition(gameToUpdate: Game, elapsedMs: number)
   {
-    if (gameToUpdate.player1_powerUpSandevistanGuardActive == false)
+    if (gameToUpdate.player1_powerUpSandevistanGuard == false)
       gameToUpdate.player1_posY += gameToUpdate.player1_direction * (elapsedMs / 1000) * this.speedPlayer;
     else
       gameToUpdate.player1_posY += gameToUpdate.player1_direction * (elapsedMs / 1000) * this.speedPlayer * this.SandevistanModificator;
 
-    if (gameToUpdate.player2_powerUpSandevistanGuardActive == false)
+    if (gameToUpdate.player2_powerUpSandevistanGuard == false)
       gameToUpdate.player2_posY += gameToUpdate.player2_direction * (elapsedMs / 1000) * this.speedPlayer;
     else
       gameToUpdate.player2_posY += gameToUpdate.player2_direction * (elapsedMs / 1000) * this.speedPlayer * this.SandevistanModificator;
@@ -430,7 +433,7 @@ export class GameService
       gameToUpdate.player2_posY = -0.8;
   }
 
-  private updateBallPositionBall(gameToUpdate: Game, elapsedMs: number)
+  private updatePositionBall(gameToUpdate: Game, elapsedMs: number)
   {
     let actualSpeed: number = gameToUpdate.ball_speed;
     // v1 < 0.5 || v1 > 1.5
@@ -438,27 +441,32 @@ export class GameService
     // randomRadiant = (-0.25 + (randomAngle / 1000)) * Math.PI; -> -0.5 * pi < v1 < 0.5 * pi
     // randomRadiant = (-0.75 - (randomAngle / 1000)) * Math.PI; -> -1.5 * pi < v2 < -0.5
 
+    let radiantOntwo: number = gameToUpdate.ball_direction % 2;
+    while (radiantOntwo < 0)
+      radiantOntwo += 2;
+
     if (gameToUpdate.player1_powerUpSandevistanGuard == true && 
-      (gameToUpdate.ball_direction % 2) > 0.5 && (gameToUpdate.ball_direction % 2) < 1.5)
+      ((radiantOntwo % 2) > 0.5 && (radiantOntwo % 2) < 1.5) &&
+      gameToUpdate.ball_posX <= 0)
     {
       gameToUpdate.player1_powerUpSandevistanGuardActive = true;
     }
 
     if (gameToUpdate.player2_powerUpSandevistanGuard == true &&
-      (gameToUpdate.ball_direction % 2) < 0.5 || (gameToUpdate.ball_direction % 2) > 1.5)
-      {
+      ((radiantOntwo % 2) < 0.5 || (radiantOntwo % 2) > 1.5) &&
+      gameToUpdate.ball_posX >= 0)
+    {
       gameToUpdate.player2_powerUpSandevistanGuardActive = true;
     }
 
     if (gameToUpdate.player1_powerUpSandevistanSmashActive || gameToUpdate.player2_powerUpSandevistanSmashActive)
       actualSpeed *= this.SandevistanModificator;
 
-      if ((gameToUpdate.player1_powerUpSandevistanGuardActive && gameToUpdate.ball_posX <= 0) ||
-        (gameToUpdate.player2_powerUpSandevistanGuardActive && gameToUpdate.ball_posX >= 0))
+    if (gameToUpdate.player1_powerUpSandevistanGuardActive || gameToUpdate.player2_powerUpSandevistanGuardActive)
       actualSpeed /= this.SandevistanModificator;
 
-    gameToUpdate.ball_posX += Math.cos(gameToUpdate.ball_direction) * (elapsedMs / 1000) * actualSpeed;
-    gameToUpdate.ball_posY += Math.sin(gameToUpdate.ball_direction) * (elapsedMs / 1000) * actualSpeed;
+    gameToUpdate.ball_posX += Math.cos(gameToUpdate.ball_direction * Math.PI) * (elapsedMs / 1000) * actualSpeed;
+    gameToUpdate.ball_posY += Math.sin(gameToUpdate.ball_direction * Math.PI) * (elapsedMs / 1000) * actualSpeed;
   }
 
   private manageWallCollisionY(gameToUpdate: Game)
@@ -479,7 +487,8 @@ export class GameService
   {
     if (gameToUpdate.ball_posX >= 1 || gameToUpdate.ball_posX <= -1.0)
     {
-      this.desactivationOfPowerUp(gameToUpdate);
+      if (gameToUpdate.isRanked == true)
+        this.desactivationOfPowerUp(gameToUpdate);
 
       if ((gameToUpdate.ball_posX >= 1 && 
         gameToUpdate.player2_posY + 0.2 >= gameToUpdate.ball_posY &&
@@ -505,14 +514,14 @@ export class GameService
       gameToUpdate.scoreUser1 += 1;
       // gameToUpdate.player1_power += this.powerModificationWhenScoring;
       // gameToUpdate.player2_power -= this.powerModificationWhenHit;
-      randomRadiant = (-0.25 + (randomAngle / 1000)) * Math.PI;
+      randomRadiant = (-0.25 + (randomAngle / 1000));
     }
     else
     {
       gameToUpdate.scoreUser2 += 1;
       // gameToUpdate.player2_power += this.powerModificationWhenScoring;
       // gameToUpdate.player1_power -= this.powerModificationWhenHit;
-      randomRadiant = (-0.75 - (randomAngle / 1000)) * Math.PI;
+      randomRadiant = (-0.75 - (randomAngle / 1000));
     }
 
     gameToUpdate.ball_speed = this.speedBallInit;
@@ -531,16 +540,16 @@ export class GameService
       gameToUpdate.player1_powerUpSandevistanSmash = false;
     }
 
-    if (gameToUpdate.player1_powerUpSandevistanGuardActive == true)
-    {
-      gameToUpdate.player1_powerUpSandevistanGuardActive = false;
-      gameToUpdate.player1_powerUpSandevistanGuard = false;
-    }
-
     if (gameToUpdate.player2_powerUpSandevistanSmashActive == true)
     {
       gameToUpdate.player2_powerUpSandevistanSmashActive = false;
       gameToUpdate.player2_powerUpSandevistanSmash = false;
+    }
+
+    if (gameToUpdate.player1_powerUpSandevistanGuardActive == true)
+    {
+      gameToUpdate.player1_powerUpSandevistanGuardActive = false;
+      gameToUpdate.player1_powerUpSandevistanGuard = false;
     }
 
     if (gameToUpdate.player2_powerUpSandevistanGuardActive == true)
@@ -560,8 +569,8 @@ export class GameService
     if (gameToUpdate.ball_posX >= 1)
     {
       playerDistanceWithBall = gameToUpdate.player2_posY - gameToUpdate.ball_posY;
-      playerImpactModificator = playerDistanceWithBall * Math.PI;
-      gameToUpdate.ball_direction = 1 * Math.PI - gameToUpdate.ball_direction + playerImpactModificator;
+      playerImpactModificator = playerDistanceWithBall;
+      gameToUpdate.ball_direction = 1 - gameToUpdate.ball_direction + playerImpactModificator;
       gameToUpdate.ball_posX = 1 - (gameToUpdate.ball_posX - 1);
 
       if (gameToUpdate.player2_powerUpSandevistanSmash == true)
@@ -570,8 +579,8 @@ export class GameService
     else if (gameToUpdate.ball_posX <= -1)
     {
       playerDistanceWithBall = gameToUpdate.player1_posY - gameToUpdate.ball_posY;
-      playerImpactModificator = playerDistanceWithBall * Math.PI;
-      gameToUpdate.ball_direction = 1 * Math.PI - gameToUpdate.ball_direction - playerImpactModificator;
+      playerImpactModificator = playerDistanceWithBall;
+      gameToUpdate.ball_direction = 1 - gameToUpdate.ball_direction - playerImpactModificator;
       gameToUpdate.ball_posX = -1 - (gameToUpdate.ball_posX + 1);
 
       if (gameToUpdate.player1_powerUpSandevistanSmash == true)

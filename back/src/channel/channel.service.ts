@@ -79,9 +79,9 @@ export class ChannelService {
         }
     }
 
-    findAllChannels(): Channel[]
+    findAllPublicChannels(): Channel[]
     {
-        return this.channel;
+        return this.channel.filter((channel) => channel.privacy == false);
     }
 
     findMyChannels(userId: number): Channel[]
@@ -297,6 +297,24 @@ export class ChannelService {
                     }
                 }
 
+                const messageOnChannelDeleted = await this.prisma.channelMessage.deleteMany(
+                {
+                    where: { channelId: Number(channelId) },
+                });
+    
+                if (!messageOnChannelDeleted)
+                    return false;
+
+                for (let i = 0; i < this.channelMessage.length; i++)
+                {
+                    if (this.channelMessage[i].channelId == channelId)
+                    {
+                        delete this.channelMessage[i];
+                        this.channelMessage.splice(i, 1);
+                        i--;
+                    }
+                }
+
                 const channelDeleted = await this.prisma.channel.delete(
                 {
                     where: { id: Number(channelId) },
@@ -305,9 +323,15 @@ export class ChannelService {
                 if (!channelDeleted)
                     return false;
                 
-                const index = this.channel.indexOf(channelToDelete)
-                delete this.channel[index];
-                this.channel.splice(index, 1);
+                for (let i = 0; i < this.channel.length; i++)
+                {
+                    if (this.channel[i].id == channelId)
+                    {
+                        delete this.channel[i];
+                        this.channel.splice(i, 1);
+                        break;
+                    }
+                }
                 return true;
             }
         } 
@@ -329,15 +353,19 @@ export class ChannelService {
         const relation = this.isMemberOf.find((isMemberOf) => isMemberOf.userId == userId &&
             isMemberOf.channelId == channelId);
 
+        console.log("password : [" + chPrisma.password + "]{" + password + "}");
+
         if (!ch || !chPrisma ||
             (relation && relation.status != "INVITED") ||
             (ch.privacy == true && !relation) ||
             (ch.privacy == true && relation && relation.status != "INVITED"))
             return false;
-        
+
+        console.log("pass fist if");
 
         if (relation && relation.status == "INVITED")
         {
+            console.log("pass on invited");
             const isMemberOfUpdated = await this.prisma.isMemberOf.updateMany(
             {
                 where: {
@@ -354,8 +382,9 @@ export class ChannelService {
 
             return true;
         }   
-        else if (chPrisma.password == "" || chPrisma.password == password)
+        else if (chPrisma.password == password)
         {
+            console.log("pass on ok password");
             const isMemberOfCreated = await this.prisma.isMemberOf.create(
             {
                 data: {
@@ -378,6 +407,7 @@ export class ChannelService {
             this.isMemberOf.push(newIsMemberOf);
             return true;
         }
+        console.log("don't pass");
         return false;
     }
 
@@ -707,8 +737,9 @@ export class ChannelService {
             isMemberOf.channelId == channelId);
 
         if (!relation || !ch || !relationToKick ||
-            relationToKick.status == "OWNER" || relationToKick.status == "BANNED" ||
-            (relationToKick.status == "ADMIN" && relation.status != "OWNER"))
+            relationToKick.status == "OWNER" ||
+            relationToKick.status == "BANNED" ||
+            relationToKick.status == "ADMIN")
             return false;
 
         if (relation.status == "OWNER" || relation.status == "ADMIN")

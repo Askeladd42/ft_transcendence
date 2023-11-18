@@ -15,3 +15,8 @@
     font-family: 'Orbitron', sans-serif; /* Typographie futuriste */
     padding: 10px 20px; /* Ajouter du padding pour mieux formater les boutons */
   }
+  .user-nickname {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }

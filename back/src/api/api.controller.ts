@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Put, HttpCode, HttpStatus, Param, UseGuards} from '@nestjs/common';
 import { User as UserModel } from '@prisma/client';
 import { UserService } from '../users/users.service';
-import { Public } from '../auth/JWTconstant';
+import { Public } from '../auth/constant';
 import { CreateUserDTO, SearchDTO } from './DTO/CreateUser.dto';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';

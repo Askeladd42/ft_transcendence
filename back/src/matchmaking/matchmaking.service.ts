@@ -73,8 +73,6 @@ export class MatchmakingService
                     {
                         if (game.isRanked == true)
                         {
-                            console.log("eruwhgiuewhrgy")
-
                             const PrismaUser1 = await this.prisma.user.findUnique({where: { id: Number(game.userId1) },});
                             const PrismaUser2 = await this.prisma.user.findUnique({where: { id: Number(game.userId2) },});
                             if (!PrismaUser1 || !PrismaUser2)
@@ -305,14 +303,10 @@ export class MatchmakingService
         else
             newElo = eloSelf + (scoreSelf - scoreFoe) * (eloSelf / eloFoe) - 10;
 
-        console.log("1-->", eloSelf, " -> ", newElo)
-
         if (newElo <= eloSelf - 100)
             newElo = eloSelf - 100;
         else if (newElo >= eloSelf + 100)
             newElo = eloSelf + 100;
-
-        console.log("2-->", eloSelf, " -> ", newElo)
 
         if (newElo <= 100)
             return 100;

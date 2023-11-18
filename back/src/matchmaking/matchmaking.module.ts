@@ -3,9 +3,10 @@ import { MatchmakingController } from './matchmaking.controller';
 import { MatchmakingService } from './matchmaking.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { GameModule } from 'src/game/game.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-	imports: [PrismaModule, GameModule],
+	imports: [PrismaModule, GameModule, AuthModule],
   	providers: [PrismaModule, MatchmakingService, GameModule],
 	controllers: [MatchmakingController],
   	exports: [MatchmakingService],

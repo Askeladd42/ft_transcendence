@@ -1,57 +1,91 @@
-
-/* gamelist.css */
+/* Styles supplémentaires pour la liste des channels */
 .channel-list {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-left: 25%;
-    margin-right: 25%;
-    width: 50%;
-    height: 60vh; /* ou une autre hauteur selon la conception de votre application */
-    position: relative; /* Pour positionner le bouton de fermeture par rapport à ce conteneur */
-  }
-  
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    font-size: 24px; /* Taille de la croix pour fermer */
-  }
-  
-  .channel-item {
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
-  
-  .channel-item:hover {
-    background-color: #f0f0f0;
-  }
-  
-  ul {
-    padding: 0;
-    list-style-type: none;
-  }
-  
-  h2 {
-    text-align: center;
-  }
-  
-  .create-channel-btn {
-    padding: 10px 20px;
-    margin-top: 15px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-    cursor: pointer;
-    background-color: #0d0d14;
-    font-family: 'Orbitron', sans-serif; 
-    color:#f0f0f0;
-    border: none;
-  }
-  
-  .create-channel-btn:hover {
-    background-color: #f0f0f0;
-    color: #0d0d14;
-  }
+  margin: 0; /* Pour s'aligner avec le style global, pas de marges latérales */
+  width: 50%; /* Prend toute la largeur disponible */
+  background-color: #1c1c22; /* Couleur de fond du modal */
+  border: 1px solid #9f00c5; /* Bordure pour s'aligner avec le style des modals */
+  box-shadow: 0px 0px 10px rgba(159, 0, 197, 0.5); /* Ombre pour effet néon */
+  color: #fff; /* Texte blanc pour contraster sur le fond sombre */
+  margin: auto; /* Centrer le modal */
+  text-align: center;
+  border-radius: 3px;
+}
+
+/* Styles supplémentaires pour le header de la liste des channels */
+.channel-header {
+  background-color: #39004d; /* Couleur plus foncée pour l'en-tête pour le distinguer */
+  color: #9f00c5; /* Couleur du thème pour le texte de l'en-tête */
+  font-size: 1.5rem; /* Taille plus grande pour l'en-tête */
+  text-transform: uppercase; /* Majuscules pour un look plus cyberpunk */
+  letter-spacing: 2px; /* Espacement des lettres pour un effet plus futuriste */
+}
+.channel-item {
+  padding: 0 0 5px; /* Espacement interne pour une meilleure lisibilite*/
+}
+.channel-btn {
+  background-color: #9f00c5; /* Couleur du thème pour le texte de l'en-tête */
+  border: none; /* Supprimer la bordure par défaut */
+  border-radius: 5px; /* Coins arrondis */
+  padding: 10px 20px; /* Espacement interne pour une meilleure lisibilite*/
+  color: #fff;
+}
+/* Effet de survol pour les éléments de la liste des channels */
+.channel-btn:hover {
+  background-color: #2c0038; /* Plus sombre au survol */
+  cursor: pointer;
+}
+
+/* Styles supplémentaires pour le bouton de création de channel */
+.create-channel-btn {
+  font-size: 1rem; /* Taille de police cohérente avec les autres boutons */
+  background-color: #9f00c5; /* Même couleur de fond que les autres boutons */
+  color: #fff; /* Texte blanc pour le contraste */
+  display: block; /* Rendre le bouton un élément de bloc si ce n'est déjà fait */
+  margin-left: auto;
+  margin-right: auto; /* Centrer le bouton */
+  border: 2px solid #9f00c5; /* Bordure pour s'aligner avec le style des modals */
+  box-shadow: 0px 0px 10px rgba(159, 0, 197, 0.5); /* Ombre pour effet néon */
+  border-radius: 3px;
+}
+
+/* Effet de survol pour le bouton de création de channel */
+.create-channel-btn:hover {
+  background-color: #2c0038; /* Plus sombre au survol */
+  box-shadow: 0px 0px 12px rgba(159, 0, 197, 0.5); /* Ombre plus prononcée pour l'effet néon */
+  transform: scale(1.05); /* Légère augmentation de taille pour un effet de clic */
+  cursor: pointer; /* Curseur de la souris pour le clic */
+}
+
+/* Styliser les champs de saisie */
+input[type="name"],
+input[type="password"],
+input[type="checkbox"] {
+  background-color: #0d0d14; /* Fond sombre pour un look cyberpunk */
+  border: 1px solid #9f00c5; /* Bordure avec la couleur thématique */
+  color: #9f00c5; /* Couleur du texte violet néon pour se démarquer sur le fond sombre */
+  border-radius: 4px; /* Coins arrondis */
+  margin-bottom: 10px; /* Espacement entre les champs */
+  outline: none; /* Supprimer le contour par défaut lors de la sélection */
+}
+
+/* Ajouter un effet visuel pour l'élément input de type checkbox pour le rendre plus visible */
+input[type="checkbox"] {
+  transform: scale(1.2); /* Agrandir légèrement la checkbox */
+  cursor: pointer; /* Indiquer que la checkbox est cliquable */
+  vertical-align: middle; /* Aligner verticalement avec le texte du label */
+  margin-right: 5px; /* Un peu d'espace entre la checkbox et le texte */
+}
+
+/* Styliser les boutons de confirmation et d'annulation */
+.confirm-create,
+.cancel-btn {
+  background-color: #39004d; /* Couleur de fond sombre pour les boutons */
+  border: none; /* Supprimer la bordure par défaut */
+  border-radius: 5px; /* Coins arrondis */
+  padding: 10px 20px; /* Espacement interne pour une meilleure lisibilite*/
+  color: #fff;
+}
+.confirm-create:hover,.cancel-btn:hover {
+  cursor:pointer;
+  transform: scale(1.05);
+}

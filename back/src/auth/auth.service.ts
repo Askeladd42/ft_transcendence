@@ -3,6 +3,7 @@ import { UserService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDTO } from 'src/api/DTO/CreateUser.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,15 @@ export class AuthService {
 	return myuser;
   }
 //
+
+  async makeorret(user: CreateUserDTO): Promise<User> {
+	var myuser = await this.usersService.user({email: user.email})
+	if (!myuser)
+	{
+		myuser = await this.usersService.createUser(user as any)
+	}
+	return (myuser)
+  }
   async signIn(user: any): Promise<any> {
     
 	console.log("[auth service sign in called with params ", user)
@@ -69,6 +79,16 @@ export class AuthService {
 		return (true);
 	}
 	console.log("[Auth service verifyadminorsame] checked as admin")
+	return (true);
+  }
+
+  async verifysame(user: CreateUserDTO, id: number): Promise<boolean> {
+	if(user.id != id)
+	{
+		console.log("[Auth service verifysame] different user and not admin")
+		return (false);
+	}
+	console.log("[Auth service verifysame] checked as same user")
 	return (true);
   }
 }

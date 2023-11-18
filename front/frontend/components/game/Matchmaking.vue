@@ -2,10 +2,11 @@
 <template>
 	<div v-if="searching && !showGame" class="matchmaking-container">
     <h1>Matchmaking</h1>
-		<p>Recherche en cours...</p>
+		<!-- <p>Recherche en cours...</p> -->
+    <img src="~/assets/icons/matchmaking.svg" class="matchmaking-loading" alt="loading"/>
 		<button v-if="!showGame" @click="cancelMatchmakingForUser">Annuler</button>
 	</div>
-  <Game v-if="showGame"/>
+  <Game v-if="showGame" @closeGame="gameOver"/>
   </template>
   
   <script>
@@ -25,9 +26,17 @@
     return { cookies };
     },
     mounted() {
-    this.loopMatchmaking();
+      if(!this.showGame)
+        this.loopMatchmaking();
   },
+  emits: ['cancelMatchmaking'],
 	methods: {
+    gameOver() {
+      this.showGame = false;
+      this.$emit('closeGame');
+      this.searching = false;
+      this.$emit('cancelMatchmaking');
+    },
     async loopMatchmaking() {
     const userId = this.cookies.get("userId"); 
     const token = this.cookies.get('authToken'); // get the token from the cookies
@@ -54,16 +63,17 @@
           console.log('ERROR');
         }
       } catch (error) {
-        console.log('Error in loopMatchmaking:', error);
+        // console.log('Error in loopMatchmaking:', error);
         clearInterval(this.intervalId);
       }
-    }, 100);
+    }, 1000);
   },
   stopLoop() {
     clearInterval(this.intervalId);
   },
-  async cancelMatchmakingForUser(userId) {
-  userId = this.cookies.get("userId"); 
+
+  async cancelMatchmakingForUser() {
+  const userId = this.cookies.get("userId"); 
   const token = this.cookies.get('authToken'); // get le token dans les cookies
   const baseUrl = `http://${window.location.hostname}`;
   try {
