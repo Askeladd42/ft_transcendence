@@ -4,8 +4,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Channel } from './interfaces/channel.interface';
 import { IsMemberOf } from './interfaces/isMemberOf.interface';
 import { ChannelMessage } from './interfaces/channelMessage.interface';
+import * as bcrypt from 'bcrypt';
 import e from 'express';
 import { notEqual } from 'assert';
+import { ArchivementService } from 'src/archivement/archivement.service';
 // import { timer } from 'rxjs';
 
 
@@ -18,7 +20,7 @@ export class ChannelService {
     private channelMessage: ChannelMessage[] = [];
 
     // constructor and call a clock to update all game
-    constructor(private prisma: PrismaService)
+    constructor(private prisma: PrismaService, private archivement: ArchivementService)
     {
         this.initializeValue();
     }
@@ -101,6 +103,24 @@ export class ChannelService {
         return myChannels;
     }
 
+    findMyChannelWithPrivileges(channelId: number, userId:number): Channel[]
+    {
+        const myChannels: Channel[] = [];
+        const userIsOnChannels = this.isMemberOf.filter((isMemberOf) => isMemberOf.userId == userId && 
+        isMemberOf.status == "OWNER" || isMemberOf.status == "ADMIN");
+        
+        for (let i = 0; i < this.channel.length; i++)
+        {
+            for (let j = 0; j < userIsOnChannels.length; j++)
+            {
+                if (this.channel[i].id == userIsOnChannels[j].channelId && userIsOnChannels[j].status != "BANNED")
+                    myChannels.push(this.channel[i]);
+            }
+        }
+
+        return myChannels;
+    }
+
     async findSpecificChannels(channelId: number, userId: number): Promise<Channel | undefined>
     {    
         const realtion = this.isMemberOf.find((isMemberOf) => isMemberOf.userId == userId && 
@@ -123,13 +143,23 @@ export class ChannelService {
         if (!user)
             return ;
 
+        let salted_pass: string = "";
+        let salt: string = "";
+        if (channelPass != "")
+        {
+            const saltRounds = 10; // Number of salt rounds (cost factor)
+            salt = bcrypt.genSaltSync(saltRounds); // Generate a salt
+            salted_pass = bcrypt.hashSync(channelPass, salt);
+
+        }
         const channelCreated = await this.prisma.channel.create(
         {
             data:
             {
                 name: channelName,
                 privacy: channelPrivacy,
-                password: channelPass,
+                password: salted_pass,
+                salt: salt,
                 creation: new Date(),
             },
         });
@@ -168,6 +198,10 @@ export class ChannelService {
 
         this.channel.push(newChannel); 
         this.isMemberOf.push(newIsMemberOf);
+
+        this.archivement.unlockArchivements(userId, this.archivement.archivementIdWelcomeToTheAfterlife);
+        this.archivement.unlockArchivements(userId, this.archivement.archivementIdVip);
+
         return newChannel;
     }
 
@@ -255,10 +289,19 @@ export class ChannelService {
             const channel = this.channel.find((channel) => channel.id == channelId);
             if (channel)
             {
+                let salted_pass: string = "";
+                let salt: string = "";
+                if (newPassword != "")
+                {
+                    const saltRounds = 10; // Number of salt rounds (cost factor)
+                    salt = bcrypt.genSaltSync(saltRounds); // Generate a salt
+                    salted_pass = bcrypt.hashSync(newPassword, salt);
+
+                }
                 const channelUpdated = await this.prisma.channel.update(
                 {
                     where: { id: Number(channelId) },
-                    data: { password: newPassword },
+                    data: { password: salted_pass, salt: salt },
                 });
 
                 if (!channelUpdated)
@@ -353,19 +396,15 @@ export class ChannelService {
         const relation = this.isMemberOf.find((isMemberOf) => isMemberOf.userId == userId &&
             isMemberOf.channelId == channelId);
 
-        console.log("password : [" + chPrisma.password + "]{" + password + "}");
-
         if (!ch || !chPrisma ||
             (relation && relation.status != "INVITED") ||
             (ch.privacy == true && !relation) ||
             (ch.privacy == true && relation && relation.status != "INVITED"))
             return false;
 
-        console.log("pass fist if");
 
         if (relation && relation.status == "INVITED")
         {
-            console.log("pass on invited");
             const isMemberOfUpdated = await this.prisma.isMemberOf.updateMany(
             {
                 where: {
@@ -380,34 +419,44 @@ export class ChannelService {
 
             relation.status = "MEMBER";
 
+            this.archivement.unlockArchivements(userId, this.archivement.archivementIdWelcomeToTheAfterlife);
             return true;
         }   
-        else if (chPrisma.password == password)
+        else 
         {
-            console.log("pass on ok password");
-            const isMemberOfCreated = await this.prisma.isMemberOf.create(
+            let salted_pass: string = "";
+            if (chPrisma.salt == null || chPrisma.salt == "")
+                password = "";
+            else if (password != "" )
+                salted_pass = bcrypt.hashSync(password, chPrisma.salt);
+            
+            if (chPrisma.password == "" || chPrisma.password == salted_pass)
             {
-                data: {
-                    userId: Number(userId),
-                    channelId: Number(channelId),
-                    status: "MEMBER",
-                },
-            });
+                const isMemberOfCreated = await this.prisma.isMemberOf.create(
+                {
+                    data: {
+                        userId: Number(userId),
+                        channelId: Number(channelId),
+                        status: "MEMBER",
+                    },
+                });
 
-            if (!isMemberOfCreated)
-                return false;
-    
-            const newIsMemberOf: IsMemberOf = {
-                userId: isMemberOfCreated.userId,
-                channelId: isMemberOfCreated.channelId,
-                status: isMemberOfCreated.status,
-                dateJoined: isMemberOfCreated.dateJoined,
-            };
+                if (!isMemberOfCreated)
+                    return false;
+        
+                const newIsMemberOf: IsMemberOf = {
+                    userId: isMemberOfCreated.userId,
+                    channelId: isMemberOfCreated.channelId,
+                    status: isMemberOfCreated.status,
+                    dateJoined: isMemberOfCreated.dateJoined,
+                };
 
-            this.isMemberOf.push(newIsMemberOf);
-            return true;
+                this.isMemberOf.push(newIsMemberOf);
+
+                this.archivement.unlockArchivements(userId, this.archivement.archivementIdWelcomeToTheAfterlife);
+                return true;
+            }
         }
-        console.log("don't pass");
         return false;
     }
 
@@ -641,6 +690,7 @@ export class ChannelService {
 
             relationToPromote.status = "ADMIN";
 
+            this.archivement.unlockArchivements(userId, this.archivement.archivementIdVip);
             return true;
         }
         return false;

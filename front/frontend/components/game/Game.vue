@@ -52,13 +52,15 @@
 
         <div v-if="isRanked" class="ranked-powerups-container">
           <div class="powerup-p1-icon-container">
-            <div :class="{'sandevistanSmash1On': player1PwSmashActive == true, 'sandevistanSmash1Off': player1PwSmashActive == false}">
+            <div
+              :class="{ 'sandevistanSmash1On': player1PwSmashActive == true, 'sandevistanSmash1Off': player1PwSmashActive == false }">
               <div class="cooldownEffects"
                 :style="{ height: Math.round(player1Cooldown * 20) + '%', bottom: Math.round(100 - player1Cooldown * 20) + '%' }">
                 <p v-if="player1Cooldown != 0" class="cooldownTimer"> {{ Math.round(player1Cooldown) }} </p>
               </div>
             </div>
-            <div :class="{'sandevistanGuard1On': player1PwGuardActive == true, 'sandevistanGuard1Off': player1PwGuardActive == false}">
+            <div
+              :class="{ 'sandevistanGuard1On': player1PwGuardActive == true, 'sandevistanGuard1Off': player1PwGuardActive == false }">
               <div class="cooldownEffects"
                 :style="{ height: Math.round(player1Cooldown * 20) + '%', bottom: Math.round(100 - player1Cooldown * 20) + '%' }">
                 <p v-if="player1Cooldown != 0" class="cooldownTimer"> {{ Math.round(player1Cooldown) }} </p>
@@ -66,13 +68,15 @@
             </div>
           </div>
           <div class="powerup-p2-icon-container">
-            <div :class="{'sandevistanGuard2On': player2PwGuardActive == true, 'sandevistanGuard2Off': player2PwGuardActive == false}">
+            <div
+              :class="{ 'sandevistanGuard2On': player2PwGuardActive == true, 'sandevistanGuard2Off': player2PwGuardActive == false }">
               <div class="cooldownEffects"
                 :style="{ height: Math.round(player2Cooldown * 20) + '%', bottom: Math.round(100 - player2Cooldown * 20) + '%' }">
                 <p v-if="player2Cooldown != 0" class="cooldownTimer"> {{ Math.round(player2Cooldown) }} </p>
               </div>
             </div>
-            <div :class="{'sandevistanSmash2On': player2PwSmashActive == true, 'sandevistanSmash2Off': player2PwSmashActive == false}">
+            <div
+              :class="{ 'sandevistanSmash2On': player2PwSmashActive == true, 'sandevistanSmash2Off': player2PwSmashActive == false }">
               <div class="cooldownEffects"
                 :style="{ height: Math.round(player2Cooldown * 20) + '%', bottom: Math.round(100 - player2Cooldown * 20) + '%' }">
                 <p v-if="player2Cooldown != 0" class="cooldownTimer"> {{ Math.round(player2Cooldown) }} </p>
@@ -82,10 +86,10 @@
         </div>
         <br>
         <br>
-        <p>ArrowUp = Up</p>
-        <p>ArrowDown = Down </p>
-        <p>PowerUp1 = 1</p>
-        <p>PowerUp2 = 2</p>
+        <p v-if="!isSpectating">ArrowUp = Up</p>
+        <p v-if="!isSpectating">ArrowDown = Down </p>
+        <p v-if="!isSpectating">PowerUp1 = 1</p>
+        <p v-if="!isSpectating">PowerUp2 = 2</p>
       </div>
     </div>
 </template>
@@ -133,6 +137,7 @@ export default {
       player2PwSmashActive: false,
       player2PwGuardActive: false,
       isRanked: false,
+      isSpectating: false,
     });
     return state;
   },
@@ -322,7 +327,10 @@ export default {
         // console.log(game.isRanked);
         await this.fetchUsersById();
         this.gameInterval = setInterval(async () => {
-          await this.updateGame();
+          if (this.userId == this.player1Id || this.userId == this.player2Id)
+            await this.updateGame();
+          else
+            this.isSpectating = true;
           if (this.powerUp1Active) {
             await this.sandevistanSmash();
           }
@@ -332,6 +340,7 @@ export default {
           game = await this.getGame();
           if (!game || game.isOver) {
             clearInterval(this.gameInterval);
+            this.isSpectating = false; // optional
             this.gameInterval = null;
             this.cookies.remove("gameId");
             this.gameOver = true; // ecran de fin
@@ -422,4 +431,6 @@ export default {
 };
 </script>
 
-<style>@import '~/assets/css/game.css';</style>
+<style>
+@import '~/assets/css/game.css';
+</style>

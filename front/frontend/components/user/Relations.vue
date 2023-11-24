@@ -181,6 +181,9 @@ export default {
         const searchstring = user; // user's nickname
         const sort = "id";
         const asc = "asc";
+        if (searchstring === '' || searchstring === null || searchstring.length  > 100) {
+          return;
+        }
         const response = await fetch(`${baseUrl}:2000/api/users/${field}/${searchstring}/${sort}/${asc}`, {
           method: 'GET',
           headers: {
@@ -192,7 +195,7 @@ export default {
         // console.log(data);
         return data;
       } catch (error) {
-        console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+        return;
       }
     },
     async getFriendList() {
@@ -215,7 +218,7 @@ export default {
         this.friendList = newfriendList;
         this.friendListId = newfriendListId;
       } catch (error) {
-        console.error('Erreur lors de la récupération de la liste d\'amis:', error);
+        return;
       }
     },
 
@@ -241,7 +244,7 @@ export default {
         this.sendingList = newsendingList;
         this.sendingListId = newsendingListId;
       } catch (error) {
-        console.error('Erreur lors de la récupération de la liste des gens bloques:', error);
+        return;
       }
     },
     async getPendingList() { // invitations reçues
@@ -265,7 +268,7 @@ export default {
         this.pendingListId = newpendingListId;
         // console.log(this.blockedlist);
       } catch (error) {
-        console.error('Erreur lors de la récupération de la liste des gens bloques:', error);
+        return;
       }
     },
 
@@ -290,7 +293,7 @@ export default {
         this.blockedListId = newblockedListId;
         // console.log(this.blockedlist);
       } catch (error) {
-        console.error('Erreur lors de la récupération de la liste des gens bloques:', error);
+        return;
       }
     },
     async blockUser(user) { // fonctionne
@@ -311,7 +314,7 @@ export default {
           this.blocked = ''; // Réinitialiser après l'envoi
         }
       } catch (error) {
-        console.error('Erreur lors du blocage de l\'utilisateur:', error);
+        return;
       }
     },
     async deleteBlockedUser(user) {
@@ -330,7 +333,7 @@ export default {
           },
         });
       } catch (error) {
-        console.error('Erreur lors de la suppression de l\'utilisateur bloqué:', error);
+        return;
       }
     },
     async acceptOrSendFriendRequest(user) {
@@ -351,7 +354,7 @@ export default {
         }
       }
       catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'utilisateur en ami:', error);
+        return;
       }
 
     },
@@ -373,7 +376,7 @@ export default {
           });
         }
       } catch (error) {
-        console.error('Erreur lors de la suppression de l\'utilisateur en ami:', error);
+        return;
       }
     },
     async deleteFriend(user) {
@@ -400,7 +403,7 @@ export default {
           }
         }
       } catch (error) {
-        console.error('Erreur lors de la suppression de l\'utilisateur en ami:', error);
+        return;
       }
     },
 
@@ -411,7 +414,7 @@ export default {
         await this.getPendingList();
         await this.getBlockedList();
       } catch (error) {
-        console.error('Erreur lors de la mise à jour des listes :', error);
+        return;
       }
     },
     startLoop() {

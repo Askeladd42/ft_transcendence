@@ -26,7 +26,7 @@ export class oath42 extends PassportStrategy(Strategy, '42auth') {
   async validate(accessToken, refreshToken, profile, cb): Promise<any> {
 	if (!profile)
 	{
-		console.log("[oauth strategy validate] not a real user")
+		console.log("[oauth strategy validate] fail not a real user")
 		throw new UnauthorizedException();
 	}
 	const myshit = {

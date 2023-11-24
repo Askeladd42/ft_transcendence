@@ -46,3 +46,18 @@
     margin-left: auto;
     margin-right: auto;
   }
+
+  .busy-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* fond semi-transparent */
+    color: #fff; /* texte blanc */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* s'assure que ça s'affiche au-dessus de la liste, pour ne pas y accéder */
+  }

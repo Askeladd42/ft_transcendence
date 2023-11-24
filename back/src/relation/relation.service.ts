@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Blocked } from './interfaces/blocked.interface';
 import { Friend } from './interfaces/friend.interface';
+import { ArchivementService } from 'src/archivement/archivement.service';
 
 @Injectable()
 export class RelationService
@@ -9,7 +10,7 @@ export class RelationService
     private blocked: Blocked[] = [];
     private friend: Friend[] = [];
 
-    constructor(private prisma: PrismaService)
+    constructor(private prisma: PrismaService, private archivement: ArchivementService)
     {
         this.initializeValue();
     }
@@ -270,6 +271,8 @@ export class RelationService
                 return false;
 
             UserIdMyFriendPendingRequest.accepted = friendUpdated.accepted;
+            this.archivement.unlockArchivements(userId, this.archivement.archivementIdPartner);
+            this.archivement.unlockArchivements(userIdRequest, this.archivement.archivementIdPartner);
         }
         else
         {

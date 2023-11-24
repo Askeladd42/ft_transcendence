@@ -5,16 +5,7 @@ import { PrivateMessage } from './interfaces/privateMessage.interface';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
-
-@Injectable()
-export class stringExistNotNullPipe implements PipeTransform {
-  transform(value: string, metadata: ArgumentMetadata) {
-    if (!value || value == null) {
-      throw new BadRequestException('Validation failed');
-    }
-    return value;
-  }
-}
+import { numberValidityPipe, stringExistNotNullPipe } from 'src/injectable';
 
 @Controller('privateMessage')
 export class PrivateMessageController {
@@ -23,7 +14,7 @@ export class PrivateMessageController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAllUserWithPrivateMessage/:userId(\\d+)')
   async getAllUserWithPrivateMessage(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<number[]>
   {
@@ -35,8 +26,8 @@ export class PrivateMessageController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAllMessageFromUser/:userId(\\d+)/:OtherUserId(\\d+)')
   async getAllMessageFromUser(
-    @Param('userId') userId: number,
-    @Param('OtherUserId') OtherUserId: number,
+    @Param('userId', numberValidityPipe) userId: number,
+    @Param('OtherUserId', numberValidityPipe) OtherUserId: number,
     @User() CallerId: number
   ): Promise<PrivateMessage[]>
   {
@@ -48,8 +39,8 @@ export class PrivateMessageController {
   @UseGuards(JwtAuthGuard)
   @Post('/newMessageToUser/:userId(\\d+)/:OtherUserId(\\d+)/:content')
   async newMessageToUser(
-    @Param('userId')userId: number,
-    @Param('OtherUserId')OtherUserId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('OtherUserId', numberValidityPipe)OtherUserId: number,
     @Param('content', stringExistNotNullPipe)content: string,
     @User() CallerId: number
   ): Promise<boolean>
@@ -62,9 +53,9 @@ export class PrivateMessageController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateMessageToUser/:userId(\\d+)/:OtherUserId(\\d+)/:dateMessageToUpdate/:content')
   async updateMessageToUser(
-    @Param('userId')userId: number,
-    @Param('OtherUserId')OtherUserId: number,
-    @Param('dateMessageToDelete', stringExistNotNullPipe)dateMessageToUpdate: string,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('OtherUserId', numberValidityPipe)OtherUserId: number,
+    @Param('dateMessageToUpdate', stringExistNotNullPipe)dateMessageToUpdate: string,
     @Param('content', stringExistNotNullPipe)content: string,
     @User() CallerId: number
   ): Promise<boolean>
@@ -77,8 +68,8 @@ export class PrivateMessageController {
   @UseGuards(JwtAuthGuard)
   @Delete('/deleteMessageToUser/:userId(\\d+)/:OtherUserId(\\d+)/:dateMessageToDelete')
   async deleteMessageToUser(
-    @Param('userId')userId: number,
-    @Param('OtherUserId')OtherUserId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('OtherUserId', numberValidityPipe)OtherUserId: number,
     @Param('dateMessageToDelete', stringExistNotNullPipe)dateMessageToDelete: string,
     @User() CallerId: number
   ): Promise<boolean>

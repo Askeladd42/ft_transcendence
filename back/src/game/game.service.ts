@@ -176,6 +176,72 @@ export class GameService
     return game_1;
   }
 
+  async findLastTenGamesOf(id: number): Promise<Game[]>
+  {
+    const game_prisma = await this.prisma.game.findMany(
+    {
+      where:
+      {
+        OR:
+        [
+          { userId1: Number(id) },
+          { userId2: Number(id) },
+        ],
+        isOver: true,
+      },
+      take: 10,
+      orderBy:
+      {
+        id: 'desc'
+      }
+    });
+
+    if (!game_prisma || game_prisma.length == 0)
+      return [];
+    
+    let game: Game[] = [];
+    for (let i: number = 0; i < game_prisma.length; i++)
+    {
+      let gameToPush: Game = {
+        id: game_prisma[i].id,
+        userId1: game_prisma[i].userId1,
+        userId2: game_prisma[i].userId2,
+        isRanked: game_prisma[i].isRanked,
+        isOver: game_prisma[i].isOver,
+        scoreUser1: game_prisma[i].scoreUser1,
+        scoreUser2: game_prisma[i].scoreUser2,
+        date: game_prisma[i].date,
+        started: true,
+        timeRemaining: 0,
+        player1_posY: 0,
+        player1_direction: 0,
+        player2_posY: 0,
+        player2_direction: 0,
+        ball_posY: 0,
+        ball_posX: 0,
+        ball_direction: 0,
+        ball_speed: 0,
+        player1_power: 0,
+        player1_powerUpCooldown: 0,
+        player1_powerUpSandevistanSmash: false,
+        player1_powerUpSandevistanSmashActive: false,
+        player1_powerUpSandevistanGuard: false,
+        player1_powerUpSandevistanGuardActive: false,
+        player2_power: 0,
+        player2_powerUpCooldown: 0,
+        player2_powerUpSandevistanSmash: false,
+        player2_powerUpSandevistanSmashActive: false,
+        player2_powerUpSandevistanGuard: false,
+        player2_powerUpSandevistanGuardActive: false,
+      }
+      
+      if (gameToPush)
+        game.push(gameToPush);
+    }
+
+    return game;
+  }
+
   async updatePlayerDirection(id: number, userId: number, PlayerDirection: number) {
     const gameToUpdate = this.game.find((game) => game.id == id);
     if (gameToUpdate && !gameToUpdate.isOver)

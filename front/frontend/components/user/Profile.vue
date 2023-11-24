@@ -7,16 +7,79 @@
         <h5>Profil</h5>
         <span @click="closeProfilePage" class="custom-modal-close">&times;</span>
       </div>
-      <div class="custom-modal-body">
-        <p class="user-nickname">{{ this.currentNickname }}</p>
-        <p>Parties : 0</p>
-        <p>Victoires : 0</p>
-        <p>Défaites : 0</p>
-        <img src="~/assets/user-circle.png" class="profile-img" />
-        <button @click="closeProfilePage" class="profile-btn">Retour</button>
-        <!-- Temporaire : bouton de modification de profil -->
-        <button v-if="currentUser == userId" @click="closeProfilePage, showProfileModal = true"
-          class="profile-btn">Modifier le profil</button>
+      <div class="tab">
+        <div class="profile-header">
+          <div class="tab-profile" v-for="(tabItem, index) in tabs" :key="index" @click="changeIndex(index)"
+            :class="{ 'active-tab': tab === index }">{{ tabItem.name }}
+          </div>
+        </div>
+        <div class="tab-item">
+          <div v-show="currentIndex === 0">
+            <div class="custom-modal-body">
+              <p class="user-nickname-profile">{{ currentNickname }}</p>
+              <img :src="currentUserAvatar" class="profile-img resized-image" />
+              <button @click="closeProfilePage" class="profile-btn">Retour</button>
+              <p></p>
+              <!-- Temporaire : bouton de modification de profil -->
+              <button v-if="currentUser == userId" @click="closeProfilePage, showProfileModal = true"
+                class="profile-btn">Modifier le profil</button>
+            </div>
+          </div>
+          <div class="tab-item">
+            <div v-show="currentIndex === 1">
+            <!-- Onglet des succès -->
+            <div v-show="achievementIndex === 0">
+              <div class="custom-modal-body">
+                <div class="achievement-list">
+                  <div class="uniqueAchievement" v-for="achievement in achievementList" :key="achievement.id">
+                    <div class="achievement-img-div">
+                      <img class="achievement-img resized-image" v-if="achievementIsDone(achievement.id) == false" :src="achievement.pathImage"/>
+                    </div>
+                    <div class="achievement-item">
+                      <p>{{ achievement.name }} :</p>
+                      <p>{{ achievement.description }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          <div class="tab-item">
+            <!-- Onglet des parties jouées -->
+            <div v-show="currentIndex === 2">
+              <div class="custom-modal-body">
+                <div class="last10games-list">
+                  <div v-for="game in last10Games" :key="game.id">
+                    <div :class="{ 'gameWin': gameResult(game).scoreUser1 > gameResult(game).scoreUser2, 'gameLoose': gameResult(game).scoreUser1 < gameResult(game).scoreUser2, 'gameDraw': gameResult(game).scoreUser1 == gameResult(game).scoreUser2 }">
+                      <div class="gameItem">
+                        <div class="gameDate">
+                          <p>{{ game.date }}</p> 
+                        </div>
+                        <div class="myInfo">
+                            <img class="myImage" :src="currentUserAvatar"/>
+                            <p class="myName">{{ currentNickname }}</p>
+                        </div>
+                        <div class="result">
+                          <div class="result Status"></div>
+                          <div class= "score">
+                            <span class="myScore">{{ gameResult(game).scoreUser1 }}</span>
+                            <span class="vs">-</span>
+                            <span class="foeScore">{{ gameResult(game).scoreUser2 }}</span>
+                          </div>
+                        </div>
+                        <div class="foeInfo">
+                          <img class="foeImage" :src="gameResult(game).opponentImage"/>
+                          <p class="foeName">{{ gameResult(game).opponentNickname }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -31,14 +94,14 @@
         <!-- Contenu des formulaires de modification -->
         <form @submit.prevent="submitProfile" id="profile">
           <div v-if="showEmailChange" class="form-group">
-            <label for="email">Adresse e-mail :</label>
+            <label for="email">Nouvel adresse e-mail :</label>
             <input type="email" class="form-control" id="email" name="email"
-              placeholder="Entrez votre adresse e-mail actuelle" v-model="currentUserEmail">
+              placeholder="Entrez votre nouvel adresse e-mail">
           </div>
           <div v-if="showEmailChange" class="form-group">
             <label for="confirm-email">Confirmer adresse e-mail :</label>
             <input type="email" class="form-control" id="confirm-email" name="confirm-email"
-              placeholder="Entrez à nouveau votre nouvelle adresse e-mail" v-model="currentUserEmail">
+              placeholder="Entrez à nouveau votre nouvelle adresse e-mail">
           </div>
 
           <!-- Formulaire de changement de pseudo -->
@@ -61,22 +124,31 @@
               placeholder="Entrez à nouveau votre mot de passe">
           </div>
 
+          <!-- Formulaire de changement d'avatar -->
           <div v-if="showAvatarChange" class="form-group">
-            <label for="avatar">Choose a profile picture:</label>
-            <input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" />
+            <label for="avatar">Entrez l'URL de votre image de profil :</label>
+            <input type="text" class="form-control" id="avatar" name="avatar"
+              placeholder="Entrez l'URL de votre image de profil" v-model="currentUserAvatar">
+          </div>
+          <!-- Formulaire de changement d'avatar -->
+          <div v-if="show2FA" class="form-group">
+            <label for="2FA"> {{ secret2FA }}</label>
+            <img :src="img2FA" alt="">
           </div>
           <div v-if="showEditButtons" class="edit-buttons">
             <button @click="setActiveChange('email')" class="edit-btn">Modifier Email</button>
             <button @click="setActiveChange('password')" class="edit-btn">Modifier Mot de passe</button>
             <button @click="setActiveChange('nickname')" class="edit-btn">Modifier Pseudo</button>
             <button @click="setActiveChange('avatar')" class="edit-btn">Modifier Avatar</button>
+            <button v-if="!FActive" @click="setActiveChange('2FA')" class="edit-btn">Activer le 2FA</button>
+            <button v-if="FActive" @click="deactivate2FA" class="edit-btn">Desactiver le 2FA</button>
           </div>
           <div v-if="formErrors.length > 0">
             <ul>
               <li class="errors" v-for="error in formErrors" :key="error">{{ error }}</li>
             </ul>
           </div>
-          <div v-if="showSubmit" class="custom-modal-footer">
+          <div v-if="showSubmit && !show2FA" class="custom-modal-footer">
             <button type="submit" class="btn btn-primary">Soumettre les modifications</button>
           </div>
         </form>
@@ -86,27 +158,29 @@
   </div>
 </template>
 <script>
-import * as bcrypt from 'bcryptjs';
 import { useCookies } from "vue3-cookies";
+import { ref, reactive, onMounted } from 'vue';
 import { validateEmail, validatePassword, validateNickname } from '../../script/validator';
 
 export default {
   name: "Profile",
+  props: ['otherUserId'],
+  emits: ['closeProfile', 'clearOtherUserId'],
   data() {
     return {
-      showEmailChange: false,
-      showPasswordChange: false,
-      showNicknameChange: false,
-      showProfilePage: false,
-      showProfileModal: false,
-      showAvatarChange: false,
-      showSubmit: false,
-      showEditButtons: true,
-      isProfileOpen: true,
-      formErrors: [],
+      tab: null,
+      tabs: [
+        { name: 'Profil de joueur' },
+        { name: 'Succès' },
+        { name: 'Historique des parties' },
+      ],
+      achievementTabs: [
+        { name: 'Liste des succès' },
+        { name: 'Liste des succès débloqués' },
+      ],
     };
   },
-  setup() {
+  setup(props, context) {
     const { cookies } = useCookies();
     const state = reactive({
       userId: cookies.get("userId"),
@@ -116,43 +190,110 @@ export default {
       currentNickname: '',
       currentPassword: '',
       currentUser: null,
+      currentUserAvatar: '',
+      showEmailChange: false,
+      showPasswordChange: false,
+      showNicknameChange: false,
+      showProfilePage: false,
+      showProfileModal: false,
+      showAvatarChange: false,
+      show2FA: false,
+      showSubmit: false,
+      showEditButtons: true,
+      isProfileOpen: true,
+      img2FA: '',
+      secret2FA: '',
+      FActive: false,
+      formErrors: [],
+      currentIndex: 0,
+      achievementIndex: 0,
+      users: [],
+      last10Games: [],
+      achievementList: [],
+      currentAchievements: [],
     });
-    return state;
-  },
-  emits: ['closeProfile' , 'clearOtherUserId'],
-  props: ['otherUserId'],
-  mounted() {
-    if (this.otherUserId) {
-      this.getUserById(this.otherUserId);
-    } else {
-      this.getUserById(this.userId);
+
+    onMounted(async () => {
+      if (props.otherUserId) {
+        await getUserById(props.otherUserId);
+      } else {
+        await getUserById(state.userId);
+      }
+      state.show2FA = false;
+      await status2FA(); // Ajoutez cette ligne
+      state.last10Games = await getLast10Games();
+      state.achievementList = await getAchievementList();
+      state.currentAchievements = await getAchievementsDone();
+    });
+
+    const achievementIsDone = (id) => {
+      for (let i = 0; i < state.currentAchievements.length; i++)
+      {
+        if (id == state.currentAchievements[i].archivementId)
+          return true;
+      }
+      return false;
+    };
+
+    const active2FA = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/auth/activate-otp`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      state.secret2FA = data.secret;
+      state.img2FA = data.img;
+      state.FActive = true;
+    };
+    const status2FA = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/auth/status-otp`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      state.FActive = data;
     }
-  },
-  methods: {
-    closeProfilePage() {
-      this.$emit('closeProfile');
-      if (this.otherUserId)
-        this.$emit('clearOtherUserId');
-    },
-    async getUserById(id) {
+    const deactivate2FA = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/auth/deactivate-otp`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      state.FActive = false;
+    };
+    const getUserById = async (id) => {
       const baseUrl = `http://${window.location.hostname}`;
       const response = await fetch(`${baseUrl}:2000/api/user/id/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.token}`,
+          'Authorization': `Bearer ${state.token}`,
         },
       });
       const data = await response.json();
       //  console.log(`User for ID ${id}:`, data);
-      this.currentUserEmail = data.email;
-      this.currentNickname = data.nickname;
-      this.currentPassword = data.password;
-      this.currentUser = data.id;
+      state.currentUserEmail = data.email;
+      state.currentNickname = data.nickname;
+      state.currentPassword = data.password;
+      state.currentUserAvatar = data.pathAvatar;
+      state.currentUser = data.id;
+      // console.log(data);
       return data;
-    },
-    validateForm() {
-      this.formErrors = []; // réinitialiser les erreurs
+    };
+    const validateForm = () => {
+      state.formErrors = []; // réinitialiser les erreurs
 
       const formData = new FormData(document.querySelector('#profile'));
       const email = formData.get('email');
@@ -161,46 +302,46 @@ export default {
       const confirmEmail = formData.get('confirm-email');
       const confirmPassword = formData.get('confirm-password');
 
-      if (!validateEmail(email) && this.showEmailChange) {
-        this.formErrors.push('L\'adresse e-mail n\'est pas valide.');
+      if (!validateEmail(email) && state.showEmailChange) {
+        state.formErrors.push('L\'adresse e-mail n\'est pas valide.');
       } else if (email !== confirmEmail) {
-        this.formErrors.push('Les adresses e-mail ne correspondent pas.');
+        state.formErrors.push('Les adresses e-mail ne correspondent pas.');
       }
-      else if (this.showEmailChange && email === this.currentUserEmail) {
-        this.formErrors.push('L\'adresse e-mail n\'a pas été modifiée.');
+      else if (state.showEmailChange && email === state.currentUserEmail) {
+        state.formErrors.push('L\'adresse e-mail n\'a pas été modifiée.');
       }
 
-      if (!validatePassword(password) && this.showPasswordChange) {
-        this.formErrors.push('Le mot de passe ne respecte pas les critères de sécurité requis.');
+      if (!validatePassword(password) && state.showPasswordChange) {
+        state.formErrors.push('Le mot de passe ne respecte pas les critères de sécurité requis.');
       } else if (password !== confirmPassword) {
-        this.formErrors.push('Les mots de passe ne correspondent pas.');
+        state.formErrors.push('Les mots de passe ne correspondent pas.');
       }
-      else if (this.showPasswordChange && password === this.currentPassword) {
-        this.formErrors.push('Le mot de passe n\'a pas été modifié.');
+      else if (state.showPasswordChange && password === state.currentPassword) {
+        state.formErrors.push('Le mot de passe n\'a pas été modifié.');
       }
 
-      if (!validateNickname(nickname) && this.showNicknameChange) {
-        this.formErrors.push('Le pseudo n\'est pas valide ou est déjà pris.');
+      if (!validateNickname(nickname) && state.showNicknameChange) {
+        state.formErrors.push('Le pseudo n\'est pas valide ou est déjà pris.');
       }
-      else if (this.showNicknameChange && nickname.length > 12) {
-        this.formErrors.push('Le pseudo ne doit pas dépasser 12 caractères.');
+      else if (state.showNicknameChange && nickname.length > 12) {
+        state.formErrors.push('Le pseudo ne doit pas dépasser 12 caractères.');
       }
-      return this.formErrors.length === 0; // retourne vrai si aucune erreur
-    },
+      return state.formErrors.length === 0; // retourne vrai si aucune erreur
+    };
 
-    async submitProfile() {
-      const token = this.cookies.get('authToken');
-      const userId = +this.cookies.get('userId');
+    const submitProfile = async () => {
+      const token = state.cookies.get('authToken');
+      const userId = +state.cookies.get('userId');
       const baseUrl = `http://${window.location.hostname}`;
 
       const formData = new FormData(document.querySelector('#profile'));
-      if (!this.validateForm()) {
+      if (!validateForm()) {
         // Si le formulaire n'est pas valide, on ne procède pas à l'envoi
         return;
       }
 
       try {
-        if (this.showEmailChange) {
+        if (state.showEmailChange) {
           const email = formData.get('email');
           const emailUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
             method: 'PUT',
@@ -214,22 +355,12 @@ export default {
           if (!emailUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour de l’e-mail');
         }
 
-        if (this.showPasswordChange) {
+        if (state.showPasswordChange) {
           const password = formData.get('password');
-
-          // Génération du mot de passe haché
-          const saltRounds = 10;
-          const salt = bcrypt.genSaltSync(saltRounds);
-          const hashedPassword = bcrypt.hashSync(password, salt);
           const passwordObject = {
-            create: {
-              salted_password: hashedPassword,
-              salt: salt,
-            },
-          };
-          // console.log(password);
-          // console.log(passwordObject);
-          const passwordUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
+            salted_password: password,
+          }
+          const passwordUpdateResponse = await fetch(`${baseUrl}:2000/api/chpassword`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -241,7 +372,7 @@ export default {
           if (!passwordUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour du mot de passe');
         }
 
-        if (this.showNicknameChange) {
+        if (state.showNicknameChange) {
           const nickname = formData.get('nickname');
           const nicknameUpdateResponse = await fetch(`${baseUrl}:2000/api/chuser`, {
             method: 'PUT',
@@ -257,59 +388,186 @@ export default {
             throw new Error(errorData.message || 'Erreur lors de la mise à jour du nom d’utilisateur');
           }
         }
-        // champ pour mettre à jour sa photo d'avatar
-        // if (this.showAvatarChange) {
-        // const avatar = formData.get('avatar');
+        if (state.showAvatarChange) {
+          const avatar = formData.get('avatar');
 
-        // const avatarUpdateResponse = await fetch('http://localhost:2000/api/chavatar', {
-        // method: 'PUT',
-        // headers: {
-        // 'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`,
-        // },
-        // body: JSON.stringify({ email: this.currentUserEmail, avatar: avatar })
-        // });
+          const avatarUpdateResponse = await fetch('http://localhost:2000/api/chuser', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ id: userId, pathAvatar: avatar })
+          });
 
-        // if (!avatarUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour de la photo d\'avatar');
-        // }
+          if (!avatarUpdateResponse.ok) throw new Error('Erreur lors de la mise à jour de la photo d\'avatar');
+        }
 
         alert('Profil mis à jour avec succès');
       } catch (error) {
         console.error(error);
-        alert(error.message);
       }
-    },
-    setActiveChange(changeType) {
+    };
+    const setActiveChange = (changeType) => {
       // Réinitialiser tous les affichages
-      this.showEmailChange = false;
-      this.showPasswordChange = false;
-      this.showNicknameChange = false;
-      this.showSubmit = true;
-      this.showEditButtons = false;
-      this.formErrors = [];
+      state.showEmailChange = false;
+      state.showPasswordChange = false;
+      state.showNicknameChange = false;
+      state.showAvatarChange = false;
+      state.show2FA = false;
+      state.FActive = false;
+      state.showSubmit = true;
+      state.showEditButtons = false;
+      state.formErrors = [];
       // Activer l'affichage approprié
       if (changeType === 'email') {
-        this.showEmailChange = true;
+        state.showEmailChange = true;
       } else if (changeType === 'password') {
-        this.showPasswordChange = true;
+        state.showPasswordChange = true;
       } else if (changeType === 'nickname') {
-        this.showNicknameChange = true;
+        state.showNicknameChange = true;
       } else if (changeType === 'avatar') {
-        this.showAvatarChange = true;
+        state.showAvatarChange = true;
       }
-    },
-    closeProfile() {
-      this.showProfileModal = false;
-      this.showEmailChange = false;
-      this.showPasswordChange = false;
-      this.showNicknameChange = false;
-      this.showAvatarChange = false;
-      this.showSubmit = false;
-      this.showEditButtons = true;
-      this.formErrors = [];
-    },
+      else if (changeType === '2FA') {
+        active2FA();
+        state.show2FA = true;
+      }
+    };
+    const changeIndex = (index) => {
+      state.tab = index;
+      state.currentIndex = index;
+    };
+    const changeAchievementIndex = (index) => {
+      state.tab = index;
+      state.achievementIndex = index;
+    };
+    const getLast10Games = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/game/lastTenGameOf/${state.currentUser}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      return data;
+    };
+    const getUserNick = async (id) => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/api/user/id/${id}`, {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${state.token}`,
+          },
+      });
+      const data = await response.json();
+      return data.nickname;
+    };
+    const fetchUser = async (id) => {
+      if (!state.users[id]) {
+        const user = await getUserNick(id);
+        state.users[id] = user;
+      }
+    };
+    const gameResult = (game) => {
+      const data = {
+        opponentNickname: '',
+        opponentImage: '',
+        result: '',
+        scoreUser1: 0,
+        scoreUser2: 0,
+      };
+      if (game.userId1 == state.userId) {
+        data.scoreUser1 = game.scoreUser1;
+        data.scoreUser2 = game.scoreUser2;
+        fetchUser(game.userId2);
+        data.opponentNickname = state.users[game.userId2];
+        data.opponentImage = state.users[game.userId2];
+        if (game.scoreUser1 > game.scoreUser2)
+          data.result = 'Victoire';
+        else if (game.scoreUser1 < game.scoreUser2)
+          data.result = 'Défaite';
+        else
+          data.result = 'Egalité';
+      }
+      else {
+        data.scoreUser1 = game.scoreUser2;
+        data.scoreUser2 = game.scoreUser1;
+        fetchUser(game.userId1);
+        data.opponentNickname = state.users[game.userId1];
+        if (game.scoreUser1 > game.scoreUser2)
+          data.result = 'Défaite';
+        else if (game.scoreUser1 < game.scoreUser2)
+          data.result = 'Victoire';
+        else
+          data.result = 'Egalité';
+      }
+      return data;
+    };
+    const getAchievementList = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/archivement/findAllArchivements`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      return data;
+    };
+    const getAchievementsDone = async () => {
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/archivement/findArchivementsDone/${state.currentUser}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+        },
+      });
+      const data = await response.json();
+      return data;
+    };
+    const closeProfile = () => {
+      state.showProfileModal = false;
+      state.showEmailChange = false;
+      state.showPasswordChange = false;
+      state.showNicknameChange = false;
+      state.showAvatarChange = false;
+      state.showSubmit = false;
+      state.show2FA = false;
+      state.showEditButtons = true;
+      state.formErrors = [];
+    };
+    const closeProfilePage = () => {
+      context.emit('closeProfile');
+      if (state.otherUserId)
+        context.emit('clearOtherUserId');
+    };
+    return {
+      ...toRefs(state),
+      getUserById,
+      validateForm,
+      submitProfile,
+      achievementIsDone,
+      setActiveChange,
+      changeIndex,
+      changeAchievementIndex,
+      closeProfile,
+      closeProfilePage,
+      active2FA,
+      deactivate2FA,
+      status2FA,
+      getLast10Games,
+      getAchievementList,
+      getAchievementsDone,
+      fetchUser,
+      gameResult,
+    };
   },
-
 };
 </script>
 <style> @import '~/assets/css/profile.css';

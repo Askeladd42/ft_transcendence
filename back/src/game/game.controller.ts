@@ -5,6 +5,7 @@ import { Game } from './interfaces/game.interface';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { numberValidityPipe } from 'src/injectable';
 
 @Controller('game')
 export class GameController
@@ -18,19 +19,28 @@ export class GameController
     return this.gameService.findAll();
   }
 
-  // return all games for one user (will be used for history)
+  // return all games for one user
   @Get('/userId/:id(\\d+)')
   async findAllForOneUser(
-    @Param('id') id: number
+    @Param('id', numberValidityPipe) id: number
   ): Promise<Game[]>
   {
     return this.gameService.findAllForOneUser(id);
   }
 
+  // return last 10 over game from a user
+  @Get('/lastTenGameOf/:id(\\d+)')
+  async findLastTenGamesOf(
+    @Param('id', numberValidityPipe) id: number
+  ): Promise<Game[]>
+  {
+    return this.gameService.findLastTenGamesOf(id);
+  }
+
   // return one game by id (will be used for getting info on current game (for player and spectator))
   @Get('/gameId/:id(\\d+)')
   async findOne(
-    @Param('id') id: number
+    @Param('id', numberValidityPipe) id: number
   ): Promise<Game | undefined>
   {
     return this.gameService.findById(id);
@@ -40,8 +50,8 @@ export class GameController
   @UseGuards(JwtAuthGuard)
   @Put('/playerGoUp/:id(\\d+)/:userId(\\d+)')
   async playerGoUp(
-    @Param('id') id: number, 
-    @Param('userId') userId: number,
+    @Param('id', numberValidityPipe) id: number, 
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   )
   {
@@ -54,8 +64,8 @@ export class GameController
   @UseGuards(JwtAuthGuard)
   @Put('/playerGoDown/:id(\\d+)/:userId(\\d+)')
   async playerGoDown(
-    @Param('id') id: number, 
-    @Param('userId') userId: number,
+    @Param('id', numberValidityPipe) id: number, 
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   )
   {
@@ -68,8 +78,8 @@ export class GameController
   @UseGuards(JwtAuthGuard)
   @Put('/playerStopMoving/:id(\\d+)/:userId(\\d+)')
   async playerStopMoving(
-    @Param('id') id: number, 
-    @Param('userId') userId: number,
+    @Param('id', numberValidityPipe) id: number, 
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   )
   {
@@ -82,8 +92,8 @@ export class GameController
   @UseGuards(JwtAuthGuard)
   @Put('/sandevistanSmash/:id(\\d+)/:userId(\\d+)/')
   async sandevistanSmash(
-    @Param('id') id: number, 
-    @Param('userId') userId: number,
+    @Param('id', numberValidityPipe) id: number, 
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   )
   {
@@ -96,8 +106,8 @@ export class GameController
   @UseGuards(JwtAuthGuard)
   @Put('/sandevistanGuard/:id(\\d+)/:userId(\\d+)/')
   async sandevistanGuard(
-    @Param('id') id: number, 
-    @Param('userId') userId: number,
+    @Param('id', numberValidityPipe) id: number, 
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   )
   {

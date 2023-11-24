@@ -31,36 +31,42 @@ export class ApiController {
 // 	admin		Int		@default(0)
 //   }
 
+	@Public()
 	@Get('user/id/:id')
 	async findUserbyID(@Param('id') id:string): Promise<UserModel>{
-		console.log("[api controller user/:id]Returning user by id ", id);
+		//console.log("[api controller user/:id]Returning user by id ", id);
 		return this.userService.user({id : Number(id)})
 	}
 
+	@Public()
 	@Get('user/id')
 	async findUserbyIDr(@Body() userData: CreateUserDTO): Promise<UserModel>{
 		console.log("[api controller user/id req]Returning user requested as ", userData);
 		return this.userService.user(userData as any)
 	}
 
+	@Public()
 	@Get('user/mail/:mail')
 	async findUserbyMail(@Param('mail') mail:string): Promise<UserModel>{
 		console.log("[api controller user/:mail]Returning user by mail ", mail);
 		return this.userService.user({email : String(mail)})
 	}
 
+	@Public()
 	@Get('user/mail')
 	async findUserbyMailr(@Body() userData: {email: string}): Promise<UserModel>{
 		console.log("[api controller user/mail req]Returning user requested as ", userData);
 		return this.userService.user(userData)
 	}
 
+	@Public()
 	@Get('user')
 	async findUserr(@Body() userData: CreateUserDTO): Promise<UserModel>{
 		console.log("[api controller user req]Returning user requested as ", userData);
 		return this.userService.user(userData as any)
 	}
 
+	@Public()
 	@Get('users')
 	async findUsers(): Promise<UserModel[]> {
 		return this.userService.users({
@@ -95,6 +101,7 @@ export class ApiController {
 		});
 	}
 
+	@Public()
 	@Get('users/:searchstring/:sort/:asc')
 	async SearchallUsers(@Param('searchstring') searchstring: string, @Param('sort') sort: string, @Param('asc') asc: string): Promise<UserModel[]> {
 		if (sort != null && (asc == "asc" || asc == "desc"))
@@ -142,6 +149,7 @@ export class ApiController {
 		});
 	}
 
+	@Public()
 	@Get('users/:field/:searchstring/:sort/:asc')
 	async SearchUsers(@Param('field') field: string, @Param('searchstring') searchstring: string, @Param('sort') sort: string, @Param('asc') asc: string): Promise<UserModel[]> {
 		if (field == null)
@@ -163,6 +171,7 @@ export class ApiController {
 		});
 	}
 
+	@Public()
 	@Get('users/searchall')
 	async SearchUsers2(@Body() data: SearchDTO): Promise<UserModel[]> {
 		const searchstring = data.searchstring
@@ -214,6 +223,7 @@ export class ApiController {
 		});
 	}
 
+	@Public()
 	@Get('users/search')
 	async SearchUsers3(@Body() data: SearchDTO): Promise<UserModel[]> {
 		const searchstring = data.searchstring
@@ -243,6 +253,7 @@ export class ApiController {
 	}
 
 
+	@Public()
 	@Get('admins')
 	async findAdmins(): Promise<UserModel[]> {
 		return this.userService.users({
@@ -279,6 +290,11 @@ export class ApiController {
 	  @Body() userData: CreateUserDTO,
 	): Promise<UserModel> {
 	  console.log("New user sign up");
+	  if (userData.password && userData.password.oAuth42Link == null)
+	  {
+		userData.password = { create: await this.authService.makepass(userData.password.salted_password)} as any
+		console.log("Du coup makepass est ", userData.password)
+	  }
 	  return this.userService.createUser(userData as any);
 	}
 //
@@ -312,18 +328,20 @@ export class ApiController {
 				})
 		}//
 
+	@UseGuards(JwtAuthGuard)
 	@Put('chpassword')
 	async modifypassword(
-		@Body() userdata: {id: string | number, newpass?:string, newsalt?:string}):
+		@Body() userdata: {id: string | number, password?:string, newsalt?:string}):
 		Promise<UserModel | null> {
 			console.log("[Put user] modifying user request: ", userdata);
 			const OurUser = await this.userService.fuser(userdata.id)
 			if (OurUser != null)
 			{
 				console.log("[put user] User found ", OurUser.id)
+				const pass = await this.authService.makepass(userdata.password)
 				await this.userService.updatePass({
 					where: {id: OurUser.id},
-					data: {salted_password: userdata.newpass, salt: userdata.newsalt}
+					data: {salted_password: pass.salted_password, salt: pass.salt}
 				})
 				// return this.userService.updateUser({
 				// 	where: {email: userdata.email},
@@ -336,6 +354,7 @@ export class ApiController {
 			// ok
 		}
 
+	@UseGuards(JwtAuthGuard)
 	@Put('chemail')
 	async modifyemail(
 		@Body() userdata: {email: string; newmail?:string},):
@@ -347,6 +366,7 @@ export class ApiController {
 			})
 		}
 
+	@UseGuards(JwtAuthGuard)
 	@Put('makeadmin')
 	async makeadmin(
 		@Body() userdata: {email: string; newpass?:string},):
@@ -358,6 +378,7 @@ export class ApiController {
 			})
 		}
 
+	@Public()
 	@Get('logged')
 	async amIlogged(): Promise<any> {
 		return "yes !";

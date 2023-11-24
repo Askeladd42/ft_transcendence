@@ -30,32 +30,29 @@
 </template>
 <script>
 import { useCookies } from "vue3-cookies";
+import { ref, reactive, onMounted } from 'vue';
 export default {
     name: "Logout",
-    data() {
-        return {
-            showLogoutConfirmationModal: false,
-            showLoggedOutModal: false,
-        };
-    },
     emits: ['closeLogout'],
     props: ['showlogout', 'showconfirmation'],
-    setup() {
+    setup(props, context) {
         const { cookies } = useCookies();
-        return { cookies };
-    },
-    methods: {
-
-        refresh_page() {
+        const state = reactive({
+            isUserLoggedIn: false,
+            showLoggedOutModal: false,
+            showLogoutConfirmationModal: false,
+            cookies,
+        });
+        const refresh_page = () => {
             window.location.reload();
-        },
-        logout() {
-            this.cookies.remove("authToken");
-            this.cookies.remove("userId");
-            this.isUserLoggedIn = false;
-            this.showLogoutConfirmationModal = false;
-            this.showLoggedOutModal = true;
-        },
+        };
+        const logout = () => {
+            state.cookies.keys().forEach(cookie => state.cookies.remove(cookie));
+            state.isUserLoggedIn = false;
+            state.showLogoutConfirmationModal = false;
+            state.showLoggedOutModal = true;
+        };
+        return { ...toRefs(state), refresh_page, logout };
     },
 }
 </script>

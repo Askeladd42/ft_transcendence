@@ -52,6 +52,13 @@ export class ValidateUserDTO {
 	@IsOptional()
 	@ApiProperty()
 	xliilink?: string;
+
+	@IsString()
+	@IsOptional()
+	@ApiProperty()
+	OTP?: string;//
+
+
 }
 
 // export class CreateArticleDto {

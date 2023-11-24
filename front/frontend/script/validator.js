@@ -7,7 +7,7 @@ export function validateEmail(email) {
   
   export function validatePassword(password) {
     // doit contenir au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre
-    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-+])[a-zA-Z\d!@#$%^&*()\-+]{8,}$/;
     return re.test(password);
   }
   

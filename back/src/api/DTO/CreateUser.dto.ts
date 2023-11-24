@@ -13,6 +13,7 @@ import {
   Max,
   Min,
   IsNumber,
+  IsISO8601,
 } from 'class-validator';
 import { expand } from 'rxjs';
 import { ValidateUserDTO } from 'src/auth/DTO/ValidateUser.dto';
@@ -77,6 +78,16 @@ export class CreatePassDTO implements Pass {
 	@IsOptional()
 	@ApiProperty()
 	googleAuthLink: string;
+
+	@IsString()
+	@IsOptional()
+	@ApiProperty()
+	OTPSecret: string;
+
+	@IsString()
+	@IsOptional()
+	@ApiProperty()
+	OTPToken: string;
 }
 
 export class CreateUserDTO{
@@ -134,6 +145,12 @@ export class CreateUserDTO{
 	@IsOptional()
 	@ApiProperty()
 	password?: CreatePassDTO;
+
+	@IsISO8601({strict: true,})
+	@IsString()
+	@IsOptional()
+	@ApiProperty()
+	heartbeat?: Date;
 	//Player1matches
 	//Player2Matches
 	//Channel messages

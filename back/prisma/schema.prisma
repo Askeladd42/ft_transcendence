@@ -11,12 +11,11 @@ model User {
   id                          Int @unique @id @default(autoincrement())
   name                        String?
   surname                     String?
-  nickname                    String?
+  nickname                    String? @unique
   email                       String? @unique
   admin                       Int @default(0)
   password                    Pass?
-  // lastConnection             DateTime @default(now())
-  pathAvatar                 String @default("avatar/default_avatar.png") //should be stored to avatar/*user_id* 
+  pathAvatar                 String @default("https://i.imgur.com/5T0p5kr.jpg")
   elo                       	Int @default(1000)
   player1Matches              Game[] @relation("player1")
   player2Matches              Game[] @relation("player2")
@@ -29,6 +28,7 @@ model User {
   Blocked1                    Blocked[] @relation("user1")
   Blocked2                    Blocked[] @relation("user2")
   Archivement                 ArchivementDone[] @relation("user")
+  heartbeat					  DateTime @db.Timestamp @default(now())
 }
 
 model Pass {
@@ -38,14 +38,17 @@ model Pass {
   salt                       String?
   oAuth42Link                String?// check OAuth42 ???
   googleAuthLink             String?// check GoogleAuth ???
+  OTPSecret					 String?
+  OTPToken					 String?
 }
 
 model Channel {
   id                      Int @unique @id @default(autoincrement())
   name                    String
-  pathImage               String @default("channelImage/default_channel_image.png") //should be stored to channelImage/*channel_id* 
+  pathImage               String @default("https://i.imgur.com/RDB9iMH.jpg")
   privacy                 Boolean @default(false)
   password                String @default("")
+  salt                    String @default("")
   creation                DateTime @default(now())
 
   message                 ChannelMessage[]
@@ -54,8 +57,8 @@ model Channel {
 
 model Archivement {
   id                  Int @unique @id @default(autoincrement())
-  name                String
-  description         String?
+  name                String @unique
+  description         String
   pathImg             String
   Users               ArchivementDone[] @relation("archivement") 
 }
@@ -97,19 +100,11 @@ model IsMemberOf {
   userId               Int
   channel              Channel @relation(fields: [channelId], references: [id])
   channelId            Int
-  status               String @default("INVITED")
+  status               String @default("INVITED") // "OWNER", "ADMIN", "MEMBER", "INVITED", "MUTE", "BAN"
   dateJoined           DateTime @default(now())
 
   @@unique([userId, channelId])
 }
-
-//   // string acceptable for isMemberOf_status
-//   // "CREATOR"
-//   // "ADMIN"
-//   // "MEMBER"
-//   // "INVITED"
-//   // "MUTE"
-//   // "BAN"
 
 model ChannelMessage {
   user             User @relation(fields: [userId], references: [id])

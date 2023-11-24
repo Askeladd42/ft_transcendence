@@ -5,7 +5,7 @@ export const jwtConstant = {
   };
 
 export const clientidConstant = {
-	secret: process.env.CLIENT_ID
+	secret: process.env.VITE_CLIENT_ID
   };
 
 export const clientSecretConstant = {

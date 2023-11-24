@@ -22,7 +22,7 @@ import { oath42 } from './42auth.strategy';
 //     useClass: JwtAuthGuard,
 //   }
 	],
-  imports: [UsersModule, PassportModule, JwtModule.register({
+  imports: [UsersModule, PassportModule,  JwtModule.register({
 	secret: jwtConstant.secret,
 	signOptions: { expiresIn: '24h'}
   }),

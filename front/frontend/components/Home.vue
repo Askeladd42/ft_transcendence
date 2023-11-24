@@ -4,7 +4,7 @@
     <div>
       <title>Cyberpong 2042</title>
       <div class="header">
-        <img src="~/assets/icons/home.svg" alt="Home-Icon" class="icon-home" @click="refresh_page" />
+        <img src="~/assets/icons/home.svg" alt="Home-Icon" class="icon-home" @click="Home" />
         <div class="icon-container">
           <!-- Icône Profile (visible si l'utilisateur est connecté) -->
           <img v-if="isUserLoggedIn" src="~/assets/icons/user.svg" alt="Profile-Icon" class="icon-user"
@@ -24,26 +24,26 @@
       <!-- Afficher le formulaire d'inscription -->
       <Register v-if="isRegisterOpen" @close="isRegisterOpen = false" />
       <!-- Afficher le formulaire de connexion -->
-      <Login v-if="isLoginOpen" @close="isLoginOpen = false" />
+      <Login v-if="isLoginOpen" @close="isLoginOpen = false" :otpError="ErrorBool" :authorizationCode="authCode"
+        :authError="authError" :idAuth="idAuth" />
       <!-- Afficher le profil -->
       <Profile v-if="isProfileOpen" :otherUserId="profileUserId" @closeProfile="isProfileOpen = false"
         @clearOtherUserId="clearOtherUserId" />
       <!-- Afficher la liste des channels -->
-      <Channel v-if="showChannelList" @close-channel-list="handleCloseChannelList"
-        @channel-joined="handleChannelJoined" />
+      <Channel v-if="showChannelList" @close-channel-list="handleCloseChannelList" @channel-joined="handleChannelJoined"
+        :inviteMode="inviteMode" :friendToInvite="selectedFriend" />
       <!-- Afficher la liste des parties en cours pour le mode spectateur -->
       <Spectate v-if="showMatchList" @close-match-list="handleCloseMatchList" />
-      <button v-if="!showGame && showMatchList" @click="handleCloseMatchList" class="return-btn">Retour</button>
       <!-- Afficher le chat -->
       <PrivateChat v-if="isPrivateChatOpen" @close="isPrivateChatOpen = false" :friendFromRelation="selectedFriend"
-        :channel="selectedChannel" @showProfile="showProfile" />
+        :channel="selectedChannel" @showProfile="showProfile" @createDuel="handleDuel" />
       <!-- Affiche la deconnexion -->
       <Logout :showlogout="showLoggedOut" :showconfirmation="showLogoutConfirmation" @close-logout="" />
       <!-- Afficher la liste des parties -->
       <Leaderboard v-if="showLeaderboard_" @close-list="handleCloseList" />
       <!--Affiche la liste d'amis  -->
       <FriendList v-if="isFriendListOpen" @closeFriendList="isFriendListOpen = false" @openPrivateChat="openPrivateChat"
-        @createDuel="handleDuel" @showProfile="showProfile" @inviteToChannel=""/>
+        @createDuel="handleDuel" @showProfile="showProfile" @inviteToChannel="handleInviteChannel()" />
       <!-- Afficher la fenêtre de duel -->
       <Duel v-if="showDuel" @cancelDuel="handleCloseDuel" :duelFriend="selectedFriend" />
       <Duel v-if="showAccept" @cancelDuel="handleCloseDuel" />
@@ -63,15 +63,14 @@
           <button @click="showOngoingGames" class="menu-btn">Mode Spectateur</button>
           <button @click="showOnlineChannel" class="menu-btn">Channel</button>
           <button @click="showLeaderboard" class="menu-btn">Classement</button>
-          <button @click="showMenu = false" class="menu-btn">Options</button>
           <button @click="showMenu = false" class="menu-btn">Quitter</button>
         </div>
       </div>
     </div>
     <div class="footer">
       <div class="icon-container">
-        <img v-if="isUserLoggedIn && !isPrivateChatOpen" src="~/assets/icons/chat.svg" alt="Chat-Icon" class="icon-chat"
-          @click="isPrivateChatOpen = !isPrivateChatOpen" />
+        <img v-if="isUserLoggedIn && !isPrivateChatOpen" src="~/assets/icons/chat.svg" alt="Chat-Icon"
+          class="icon-chat" @click="isPrivateChatOpen = !isPrivateChatOpen" />
       </div>
     </div>
   </div>
@@ -82,6 +81,7 @@
 </template>
 
 <script>
+import { ref, reactive, onMounted } from 'vue';
 /* auth */
 import Login from './auth/Login.vue';
 import Logout from './auth/Logout.vue';
@@ -101,9 +101,22 @@ import { useCookies } from "vue3-cookies"; // cookies
 
 export default {
   name: 'HomePage',
-  data() {
-    return {
-      /*  show */
+  components: {
+    Login,
+    Logout,
+    Register,
+    PrivateChat,
+    Channel,
+    Matchmaking,
+    Duel,
+    Spectate,
+    Profile,
+    Leaderboard,
+    FriendList,
+  },
+  setup(props, context) {
+    const { cookies } = useCookies();
+    const state = reactive({
       showGame: false,
       showLogoutConfirmation: false,
       showLoggedOut: false,
@@ -113,135 +126,182 @@ export default {
       showMatchmaking: false,
       showMatchList: false,
       pageReady: false,
-
-
-      isLoginOpen: false, //login
-      isRegisterOpen: false, //register
-      isFriendListOpen: false, //relation list : friendlist, invitation list, waiting list, blocked list
+      isLoginOpen: false,
+      isRegisterOpen: false,
+      isFriendListOpen: false,
       isUserLoggedIn: false,
       isPrivateChatOpen: false,
       isProfileOpen: false,
+      isSpectating: false,
       selectedFriend: null,
       selectedChannel: null,
-
-    };
-  },
-  setup() {
-    const { cookies } = useCookies();
-    const state = reactive({
       showDuel: false,
       showAccept: false,
       profileUserId: null,
+      intervalId: null,
+      isLoggedFailed: false,
+      isLoggedSuccessfully: false,
+      authCode: null,
+      authError: null,
+      inviteMode: false,
+      ErrorBool: false,
+      authCode: null,
+      idAuth: null,
       cookies,
     });
-    return state;
-  },
-  components: {
-    Leaderboard,
-    Register,
-    Login,
-    Logout,
-    PrivateChat,
-    Profile,
-    Channel,
-    FriendList,
-    Matchmaking,
-    Duel,
-    Spectate,
-  },
-  methods: {
-    showProfile(otherUserId) {
-      this.profileUserId = otherUserId;
-      this.isProfileOpen = true;
-      this.isFriendListOpen = false;
-    },
-    clearOtherUserId() {
-    this.profileUserId = null;
-  },
-    handleDuel(friend) {
-      this.showMenu = false;
-      this.selectedFriend = friend;
-      this.createDuel();
-    },
-    handleChannelJoined(channelId) {
-      this.isPrivateChatOpen = true;
-    },
-    openPrivateChat(friend) {
-      this.selectedFriend = friend;
-      this.isPrivateChatOpen = true;
-    },
-    checkLoginStatus() {
-      const authToken = this.cookies.get("authToken");
-      setTimeout(() => {
-        this.isUserLoggedIn = !!authToken;
-        this.pageReady = true; // Maintenant, la page est prête à être affichée.
-      }, 1); // Simule un délai de traitement
-    },
-    toggleChat() {
-      if (this.showChat)
-        this.showChat = false;
-      else
-        this.showChat = true;
-    },
-    toggleFriendList() {
-      this.$emit('toggle-friend-list');
-    },
-    refresh_page() {
-      window.location.reload();
-    },
-    startOrLogin() {
-      if (this.isUserLoggedIn) {
-        this.showMenu = true;
-      } else {
-        this.isLoginOpen = true;
+    onMounted(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const JWT = urlParams.get('access_token');
+      const userId = urlParams.get('id');
+      const error = urlParams.get('error');
+      state.authCode = urlParams.get('code');
+
+      if (error === 'no2fa' || error === 'bad2fa') {
+        state.isLoginOpen = true;
+        state.authError = error;
+        state.ErrorBool = true;
+        state.idAuth = userId;
       }
-    },
-    startGame() {
-      this.showMenu = false;
-      this.showGame = true;
-    },
-    handleUserLoggedIn(isLoggedIn) {
-      this.isUserLoggedIn = isLoggedIn;
-    },
-    handleCloseList() {
-      this.showLeaderboard_ = false;
-      this.showMenu = true;
-    },
-    handleCloseChannelList() {
-      this.showChannelList = false;
-      this.showMenu = true;
-    },
-    handleCloseMatchList() {
-      this.showMatchList = false;
-      this.showMenu = true;
-    },
-    handleCloseMatchmaking() {
-      this.showMatchmaking = false;
-      this.showMenu = true;
-    },
-    handleCloseDuel() {
-      this.showDuel = false;
-      this.showMenu = true;
-    },
-    handleQuitGame() {
-      this.showGame = false; // Cela va cacher le composant Game
-      this.showMenu = true; // Et cela va afficher à nouveau le menu principal
-    },
-    showLeaderboard() {
-      this.showLeaderboard_ = true; // Affiche le leaderboard
-      this.showMenu = false; // Cache le menu
-    },
-    showOnlineChannel() {
-      this.showChannelList = true; // Affiche la liste des channels publics
-      this.showMenu = false; // Cache le menu
-    },
-    showOngoingGames() {
-      this.showMatchList = true; // Affiche la liste des parties en cours
-      this.showMenu = false; // Cache le menu
-    },
-    async createMatchmakingForUser(isRanked) {
-      const userId = this.cookies.get("userId");
-      const token = this.cookies.get('authToken'); // get le token dans les cookies
+      // console.log(JWT);
+      // console.log(userId);
+      if (JWT) {
+        state.cookies.set("authToken", JWT);
+      }
+      if (userId) {
+        state.cookies.set("userId", userId);
+      }
+      window.history.replaceState({}, document.title, "/");
+      checkLoginStatus();
+      if (state.showMatchmaking)
+        state.intervalId = setInterval(() => {
+          loopDuelMatchmaking();
+        }, 2000);
+      setInterval(() => {
+        heartBeat();
+      }, 1000);
+    });
+    const handleInviteChannel = (friend) => {
+      state.showChannelList = true;
+      state.showMenu = false;
+      state.selectedFriend = friend;
+      state.inviteMode = true;
+    };
+    const handleChat = () => {
+      state.isPrivateChatOpen = true;
+      state.showMenu = false;
+    };
+    const showProfile = (otherUserId) => {
+      state.profileUserId = otherUserId;
+      state.isProfileOpen = true;
+      state.isFriendListOpen = false;
+    };
+    const clearOtherUserId = () => {
+      state.profileUserId = null;
+    };
+    const handleDuel = (friend) => {
+      state.showMenu = false;
+      state.isPrivateChatOpen = false;
+      state.selectedFriend = friend;
+      createDuel();
+    };
+    const handleChannelJoined = (channelId) => {
+      state.isPrivateChatOpen = true;
+    };
+    const openPrivateChat = (friend) => {
+      state.selectedFriend = friend;
+      state.isPrivateChatOpen = true;
+      state.showChannelList = false;
+    };
+    const checkLoginStatus = () => {
+      const authToken = state.cookies.get("authToken");
+      setTimeout(() => {
+        state.isUserLoggedIn = !!authToken;
+        state.pageReady = true; // Maintenant, la page est prête à être affichée.
+      }, 1); // Simule un délai de traitement
+    };
+    const toggleFriendList = () => {
+      state.emit('toggle-friend-list');
+    };
+    const refresh_page = () => {
+      window.location.reload();
+    };
+    const startOrLogin = () => {
+      if (state.isUserLoggedIn) {
+        state.showMenu = true;
+      } else {
+        state.isLoginOpen = true;
+      }
+    };
+    const startGame = () => {
+      state.showMenu = false;
+      state.showGame = true;
+    };
+    const handleUserLoggedIn = (isLoggedIn) => {
+      state.isUserLoggedIn = isLoggedIn;
+    };
+    const handleCloseList = () => {
+      state.showLeaderboard_ = false;
+      state.showMenu = true;
+    };
+    const handleCloseChannelList = () => {
+      state.showChannelList = false;
+      state.showMenu = true;
+    };
+    const handleCloseMatchList = () => {
+      state.showMatchList = false;
+      state.showMenu = true;
+    };
+    const handleCloseMatchmaking = () => {
+      state.showMatchmaking = false;
+      state.showMenu = true;
+    };
+    const handleCloseDuel = () => {
+      state.showDuel = false;
+      state.showMenu = true;
+    };
+    const handleQuitGame = () => {
+      state.showGame = false; // Cela va cacher le composant Game
+      state.showMenu = true; // Et cela va afficher à nouveau le menu principal
+    };
+    const showLeaderboard = () => {
+      state.showLeaderboard_ = true; // Affiche le leaderboard
+      state.showMenu = false; // Cache le menu
+    };
+    const showOnlineChannel = () => {
+      state.showChannelList = true; // Affiche la liste des channels publics
+      state.showMenu = false; // Cache le menu
+    };
+    const showOngoingGames = () => {
+      state.showMatchList = true; // Affiche la liste des parties en cours
+      state.showMenu = false; // Cache le menu
+    };
+    const Home = () => {
+      state.showMenu = true;
+      state.showGame = false;
+      state.showDuel = false;
+      state.showAccept = false;
+      state.showMatchmaking = false;
+      state.showMatchList = false;
+      state.showChannelList = false;
+      state.showLeaderboard_ = false;
+      state.isPrivateChatOpen = false;
+      state.isFriendListOpen = false;
+      state.isProfileOpen = false;
+    };
+    const heartBeat = async () => {
+      const token = state.cookies.get('authToken'); // get le token dans les cookies
+      const baseUrl = `http://${window.location.hostname}`;
+      const response = await fetch(`${baseUrl}:2000/auth/heartbeat`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+    };
+    const createMatchmakingForUser = async (isRanked) => {
+      const userId = state.cookies.get("userId");
+      const token = state.cookies.get('authToken'); // get le token dans les cookies
       const baseUrl = `http://${window.location.hostname}`;
       try {
         const response = await fetch(`${baseUrl}:2000/matchmaking/create/${userId}/${isRanked}`, {
@@ -254,8 +314,8 @@ export default {
         if (!response.ok) {
           throw new Error('Erreur lors de la création du matchmaking');
         }
-        this.showMatchmaking = true;
-        this.showMenu = false;
+        state.showMatchmaking = true;
+        state.showMenu = false;
         // console.log('Matchmaking créé avec succès');
         return await response.json();
       } catch (error) {
@@ -263,12 +323,12 @@ export default {
         // console.log(token);
         console.log('Erreur lors de la création du matchmaking pour l’utilisateur :', error);
       }
-    },
-    async loopDuelMatchmaking() {
-      const userId = this.cookies.get("userId");
-      const token = this.cookies.get('authToken'); // get the token from the cookies
+    };
+    const loopDuelMatchmaking = async () => {
+      const userId = state.cookies.get("userId");
+      const token = state.cookies.get('authToken'); // get the token from the cookies
       const baseUrl = `http://${window.location.hostname}`;
-      this.intervalId = setInterval(async () => {
+      state.intervalId = setInterval(async () => {
         try {
           const response = await fetch(`${baseUrl}:2000/matchmaking/userId/${userId}`, {
             method: 'GET',
@@ -282,24 +342,24 @@ export default {
           const m = await response.json();
           if (m) {
             if (m.isDuel && m.isDuelAccepted == false) {
-              this.showAccept = true;
-              this.showMenu = false;
+              state.showAccept = true;
+              state.showMenu = false;
               // console.log("Duel trouvé");
-              clearInterval(this.intervalId);
+              clearInterval(state.intervalId);
             }
           } else {
             console.log('ERROR');
           }
         } catch (error) {
           // console.log('Error in loopMatchmaking:', error);
-          clearInterval(this.intervalId);
+          clearInterval(state.intervalId);
         }
       }, 1000);
-    },
-    async createDuel() {
-      const userId = this.cookies.get("userId");
-      const token = this.cookies.get('authToken'); // get le token dans les cookies
-      const targetId = this.selectedFriend;
+    };
+    const createDuel = async () => {
+      const userId = state.cookies.get("userId");
+      const token = state.cookies.get('authToken'); // get le token dans les cookies
+      const targetId = state.selectedFriend;
       const baseUrl = `http://${window.location.hostname}`;
       try {
         const response = await fetch(`${baseUrl}:2000/matchmaking/initiateDuel/${userId}/${targetId}`, {
@@ -312,10 +372,10 @@ export default {
         if (!response.ok) {
           throw new Error('Erreur lors de la création du duel');
         }
-        this.showDuel = true;
-        this.showMenu = false;
+        state.showDuel = true;
+        state.showMenu = false;
         const duel = await response.json();
-        // this.$emit('duelCreated', duel);
+        // state.semit('duelCreated', duel);
         // console.log(duel);
         return duel;
       } catch (error) {
@@ -323,14 +383,37 @@ export default {
         // console.log(token);
         console.log('Erreur lors de la création du duel pour l’utilisateur :', error);
       }
-    },
-  },
-  mounted() {
-    this.checkLoginStatus();
-    if (this.showMatchmaking)
-      this.intervalId = setInterval(() => {
-        this.loopDuelMatchmaking();
-      }, 2000);
+    };
+    return {
+      ...toRefs(state),
+      handleInviteChannel,
+      showProfile,
+      clearOtherUserId,
+      handleDuel,
+      handleChannelJoined,
+      openPrivateChat,
+      checkLoginStatus,
+      toggleFriendList,
+      refresh_page,
+      startOrLogin,
+      startGame,
+      handleUserLoggedIn,
+      handleCloseList,
+      handleCloseChannelList,
+      handleCloseMatchList,
+      handleCloseMatchmaking,
+      handleCloseDuel,
+      handleQuitGame,
+      showLeaderboard,
+      showOnlineChannel,
+      showOngoingGames,
+      createMatchmakingForUser,
+      loopDuelMatchmaking,
+      createDuel,
+      Home,
+      heartBeat,
+
+    };
   },
 };
 </script>

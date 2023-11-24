@@ -6,6 +6,7 @@ import { Blocked } from './interfaces/blocked.interface';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { numberValidityPipe } from 'src/injectable';
 
 @Controller('relation')
 export class RelationController {
@@ -14,7 +15,7 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Get('/findMyBlocked/:userId(\\d+)')
   async findMyBlocked(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<number[]>
   {
@@ -26,8 +27,8 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Post('/blockSomeone/:userId(\\d+)/:userIdToBlock(\\d+)')
   async blockSomeone(
-    @Param('userId') userId: number,
-    @Param('userIdToBlock') userIdToBlock: number,
+    @Param('userId', numberValidityPipe) userId: number,
+    @Param('userIdToBlock', numberValidityPipe) userIdToBlock: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -39,8 +40,8 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Delete('/unBlockSomeone/:userId(\\d+)/:userIdToUnBlock(\\d+)')
   async unBlockSomeone(
-    @Param('userId') userId: number,
-    @Param('userIdToUnBlock') userIdToUnBlock: number,
+    @Param('userId', numberValidityPipe) userId: number,
+    @Param('userIdToUnBlock', numberValidityPipe) userIdToUnBlock: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -52,7 +53,7 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Get('/findMyFriend/:userId(\\d+)')
   async findMyFriend(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<number[]>
   {
@@ -64,7 +65,7 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Get('/findMyPendingRequest/:userId(\\d+)')
   async findMyPendingRequest(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<number[]>
   {
@@ -76,7 +77,7 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Get('/findFriendEmmitedRequest/:userId(\\d+)')
   async findMyEmmitedRequest(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<number[]>
   {
@@ -88,8 +89,8 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Post('/emmitOrAcceptFriendRequest/:userId(\\d+)/:userIdRequest(\\d+)')
   async emmitOrAcceptFriendRequest(
-    @Param('userId') userId: number,
-    @Param('userIdRequest') userIdRequest: number,
+    @Param('userId', numberValidityPipe) userId: number,
+    @Param('userIdRequest', numberValidityPipe) userIdRequest: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -102,8 +103,8 @@ export class RelationController {
   @UseGuards(JwtAuthGuard)
   @Delete('/removeFriend/:userId(\\d+)/:userIdToRemove(\\d+)')
   async removeFriend(
-    @Param('userId') userId: number,
-    @Param('userIdToRemove') userIdToRemove: number,
+    @Param('userId', numberValidityPipe) userId: number,
+    @Param('userIdToRemove', numberValidityPipe) userIdToRemove: number,
     @User() CallerId: number
   ): Promise<boolean>
   {

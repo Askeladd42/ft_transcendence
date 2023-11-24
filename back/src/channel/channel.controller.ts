@@ -7,29 +7,7 @@ import { ChannelMessage } from './interfaces/channelMessage.interface';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
-
-@Injectable()
-export class ParseBooleanPipe implements PipeTransform<string, boolean> {
-  transform(value: string, metadata: ArgumentMetadata): boolean {
-    if (value.toLowerCase() === 'true') {
-      return true;
-    } else if (value.toLowerCase() === 'false') {
-      return false;
-    } else {
-      throw new BadRequestException('Invalid boolean value');
-    }
-  }
-}
-
-@Injectable()
-export class stringExistNotNullPipe implements PipeTransform {
-  transform(value: string, metadata: ArgumentMetadata) {
-    if (!value || value == null) {
-      throw new BadRequestException('Validation failed');
-    }
-    return value;
-  }
-}
+import { parseBooleanPipe, numberValidityPipe, stringExistNotNullPipe, stringExistNotNullNotTooLongPipe} from 'src/injectable';
 
 @Controller('channel')
 export class ChannelController {
@@ -46,7 +24,7 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Get('/myChannel/:userId(\\d+)')
   async findMyChannels(
-    @Param('userId') userId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<Channel[]>
   {
@@ -58,10 +36,23 @@ export class ChannelController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/myChannelWithPrivileges/:channelId(\\d+)/:userId(\\d+)')
+  async findMyChannelWithPrivileges(
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @User() CallerId: number
+  ): Promise<Channel[]>
+  {
+    if (await this.authService.verifysame({id: userId}, CallerId) == false)
+      return({message: "Intruder !!!"} as any)
+    return this.channelService.findMyChannelWithPrivileges(channelId, userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('/specificChannel/:channelId(\\d+)/:userId(\\d+)')
   async findSpecificChannels(
-    @Param('channelId') channelId: number,
-    @Param('userId') userId: number,
+    @Param('channelId', numberValidityPipe) channelId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<Channel | undefined>
   {
@@ -75,10 +66,10 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/createChannel/:userId(\\d+)/:channelName/:channelPrivacy/:channelPass')
   async createChannelWithPass(
-    @Param('userId')userId: number,
-    @Param('channelName', stringExistNotNullPipe)channelName: string,
-    @Param('channelPrivacy', ParseBooleanPipe)channelPrivacy: boolean,
-    @Param('channelPass', stringExistNotNullPipe)channelPass: string,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('channelName', stringExistNotNullNotTooLongPipe)channelName: string,
+    @Param('channelPrivacy', parseBooleanPipe)channelPrivacy: boolean,
+    @Param('channelPass', stringExistNotNullNotTooLongPipe)channelPass: string,
     @User() CallerId: number
   ): Promise<Channel>
   {
@@ -90,9 +81,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/createChannel/:userId(\\d+)/:channelName/:channelPrivacy')
   async createChannelWihoutPass(
-    @Param('userId')userId: number,
-    @Param('channelName', stringExistNotNullPipe)channelName: string,
-    @Param('channelPrivacy', ParseBooleanPipe)channelPrivacy: boolean,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('channelName', stringExistNotNullNotTooLongPipe)channelName: string,
+    @Param('channelPrivacy', parseBooleanPipe)channelPrivacy: boolean,
     @User() CallerId: number
   ): Promise<Channel>
   {
@@ -104,9 +95,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateChannelName/:channelId(\\d+)/:userId(\\d+)/:newName')
   async updateChannelName(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('newName', stringExistNotNullPipe)newName: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('newName', stringExistNotNullNotTooLongPipe)newName: string,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -118,9 +109,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateChannelImage/:channelId(\\d+)/:userId(\\d+)/:newPathImage')
   async updateChannelImage(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('newPathImage', stringExistNotNullPipe)newPathImage: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('newPathImage', stringExistNotNullNotTooLongPipe)newPathImage: string,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -132,9 +123,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateChannelPrivacy/:channelId(\\d+)/:userId(\\d+)/:newPrivacy')
   async updateChannelPrivacy(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('newPrivacy', ParseBooleanPipe)newPrivacy: boolean,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('newPrivacy', parseBooleanPipe)newPrivacy: boolean,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -146,9 +137,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateChannelPassword/:channelId(\\d+)/:userId(\\d+)/:newPassword')
   async updateChannelPassword(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('newPassword', ParseBooleanPipe)newPassword: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('newPassword', parseBooleanPipe)newPassword: string,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -160,8 +151,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateChannelPassword/:channelId(\\d+)/:userId(\\d+)')
   async updateChannelNoPassword(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -173,8 +164,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Delete('/deleteChannel/:channelId(\\d+)/:userId(\\d+)')
   async deleteChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -186,8 +177,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Get('/getUsersOfChannel/:channelId(\\d+)/:userId(\\d+)')
   async getUsersOfChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @User() CallerId: number
   ): Promise<IsMemberOf[]>
   {
@@ -199,8 +190,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/joinChannel/:channelId(\\d+)/:userId(\\d+)')
   async joinChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -212,9 +203,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/joinChannel/:channelId(\\d+)/:userId(\\d+)/:password')
   async joinChannelWithPassword(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('password', stringExistNotNullPipe)password: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('password', stringExistNotNullNotTooLongPipe)password: string,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -226,9 +217,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/inviteChannel/:channelId(\\d+)/:userId(\\d+)/:userIdInvited(\\d+)')
   async inviteChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdInvited')userIdInvited: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdInvited', numberValidityPipe)userIdInvited: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -240,9 +231,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/banFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToBan(\\d+)')
   async banFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToBan')userIdToBan: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToBan', numberValidityPipe)userIdToBan: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -254,9 +245,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Delete('/unBanFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToUnBan(\\d+)')
   async unBanFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToUnBan')userIdToUnBan: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToUnBan', numberValidityPipe)userIdToUnBan: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -268,9 +259,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/muteFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToMute(\\d+)')
   async muteFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToMute')userIdToMute: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToMute', numberValidityPipe)userIdToMute: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -282,9 +273,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/unmuteFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToUnMute(\\d+)')
   async unmuteFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToUnMute')userIdToUnMute: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToUnMute', numberValidityPipe)userIdToUnMute: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -296,9 +287,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/promoteFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToPromote(\\d+)')
   async promoteFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToPromote')userIdToPromote: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToPromote', numberValidityPipe)userIdToPromote: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -310,9 +301,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/demoteFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToDemote(\\d+)')
   async demoteFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToDemote')userIdToDemote: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToDemote', numberValidityPipe)userIdToDemote: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -324,9 +315,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/giveOwnershipChannelTo/:channelId(\\d+)/:userId(\\d+)/:userIdToGiveOwnership(\\d+)')
   async giveOwnershipChannelTo(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToGiveOwnership')userIdToGiveOwnership: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToGiveOwnership', numberValidityPipe)userIdToGiveOwnership: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -338,9 +329,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Delete('/KickFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdToKick(\\d+)')
   async KickFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdToKick')userIdToKick: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdToKick', numberValidityPipe)userIdToKick: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -352,8 +343,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Delete('/leaveChannel/:channelId(\\d+)/:userId(\\d+)')
   async leaveChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @User() CallerId: number
   ): Promise<boolean>
   {
@@ -365,8 +356,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAllMessageFromChannel/:channelId(\\d+)/:userId(\\d+)')
   async getAllMessageFromChannel(
-    @Param('channelId') channelId: number,
-    @Param('userId') userId: number,
+    @Param('channelId', numberValidityPipe) channelId: number,
+    @Param('userId', numberValidityPipe) userId: number,
     @User() CallerId: number
   ): Promise<ChannelMessage[]>
   {
@@ -378,8 +369,8 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post('/newMessageToChannel/:channelId(\\d+)/:userId(\\d+)/:content')
   async newMessageToChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
     @Param('content', stringExistNotNullPipe)content: string,
     @User() CallerId: number
   ): Promise<boolean>
@@ -392,9 +383,9 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Put('/updateMessageToChannel/:channelId(\\d+)/:userId(\\d+)/:dateMessageToUpdate/:content')
   async updateMessageToChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('dateMessageToDelete', stringExistNotNullPipe)dateMessageToUpdate: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('dateMessageToUpdate', stringExistNotNullNotTooLongPipe)dateMessageToUpdate: string,
     @Param('content', stringExistNotNullPipe)content: string,
     @User() CallerId: number
   ): Promise<boolean>
@@ -407,10 +398,10 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Delete('/deleteMessageFromChannel/:channelId(\\d+)/:userId(\\d+)/:userIdMessage(\\d+)/:dateMessageToDelete')
   async deleteMessageFromChannel(
-    @Param('channelId')channelId: number,
-    @Param('userId')userId: number,
-    @Param('userIdMessage')userIdMessage: number,
-    @Param('dateMessageToDelete', stringExistNotNullPipe)dateMessageToDelete: string,
+    @Param('channelId', numberValidityPipe)channelId: number,
+    @Param('userId', numberValidityPipe)userId: number,
+    @Param('userIdMessage', numberValidityPipe)userIdMessage: number,
+    @Param('dateMessageToDelete', stringExistNotNullNotTooLongPipe)dateMessageToDelete: string,
     @User() CallerId: number
   ): Promise<boolean>
   {

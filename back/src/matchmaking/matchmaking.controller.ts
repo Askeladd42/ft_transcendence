@@ -5,19 +5,7 @@ import { Matchmaking } from './interfaces/matchmaking.interface';
 import { User } from 'src/users/users.decorator';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
-
-@Injectable()
-export class ParseBooleanPipe implements PipeTransform<string, boolean> {
-  transform(value: string, metadata: ArgumentMetadata): boolean {
-    if (value.toLowerCase() === 'true') {
-      return true;
-    } else if (value.toLowerCase() === 'false') {
-      return false;
-    } else {
-      throw new BadRequestException('Invalid boolean value');
-    }
-  }
-}
+import { parseBooleanPipe, numberValidityPipe } from 'src/injectable';
 
 @Controller('matchmaking')
 export class MatchmakingController
@@ -27,7 +15,7 @@ export class MatchmakingController
     // return active matchmaking with matchmakingId
     @Get('/matchmakingId/:matchmakingId(\\d+)')
     async findMatchmakingById(
-        @Param('matchmakingId') matchmakingId: number
+        @Param('matchmakingId', numberValidityPipe) matchmakingId: number
     ): Promise<Matchmaking | undefined>
     {
         return this.matchmakingService.findMatchmakingById(matchmakingId);
@@ -38,7 +26,7 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Get('/userId/:userId(\\d+)')
     async findMatchmakingByUser(
-        @Param('userId') userId: number,
+        @Param('userId', numberValidityPipe) userId: number,
         @User() CallerId: number
     ): Promise<Matchmaking | undefined>
     {
@@ -51,8 +39,8 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Post('/create/:userId(\\d+)/:isRanked')
     async createMatchmaking(
-        @Param('userId') userId: number,
-        @Param('isRanked', ParseBooleanPipe) isRanked: boolean,
+        @Param('userId', numberValidityPipe) userId: number,
+        @Param('isRanked', parseBooleanPipe) isRanked: boolean,
         @User() CallerId: number
     ): Promise<Matchmaking | undefined>
     {
@@ -64,7 +52,7 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Delete('/cancel/:userId(\\d+)')
     async cancelMatchmaking(
-        @Param('userId') userId: number,
+        @Param('userId', numberValidityPipe) userId: number,
         @User() CallerId: number
     ): Promise <Boolean>
     {
@@ -76,8 +64,8 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Post('/initiateDuel/:userId(\\d+)/:targetUserId(\\d+)')
     async initiateDuel(
-        @Param('userId') userId: number,
-        @Param('targetUserId') targetUserId: number,
+        @Param('userId', numberValidityPipe) userId: number,
+        @Param('targetUserId', numberValidityPipe) targetUserId: number,
         @User() CallerId: number
     ): Promise<Matchmaking | undefined>
     {
@@ -89,7 +77,7 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Put('/acceptDuel/:userId(\\d+)')
     async acceptDuel(
-        @Param('userId') userId: number,
+        @Param('userId', numberValidityPipe) userId: number,
         @User() CallerId: number
     ): Promise<Matchmaking | undefined>
     {
@@ -101,7 +89,7 @@ export class MatchmakingController
     @UseGuards(JwtAuthGuard)
     @Delete('/cancelDuel/:userId(\\d+)')
     async cancelDuel(
-        @Param('userId') userId: number,
+        @Param('userId', numberValidityPipe) userId: number,
         @User() CallerId: number
     ): Promise<boolean>
     {

@@ -1,14 +1,14 @@
 <template>
     <div v-if="isDuelPending && !showGame && duelAccepted" class="matchmaking-container">
         <h1>Duel</h1>
-        <img src="~/assets/icons/matchmaking.svg" class="matchmaking-load" alt="loading" />
+        <img src="~/assets/icons/matchmaking.svg" class="matchmaking-loading" alt="loading" />
         <button v-if="!showGame" @click="cancelDuel">Annuler</button>
     </div>
     <div v-else-if="isDuelPending && !duelAccepted && !showGame" class="matchmaking-container">
         <button v-if="!showGame" @click="acceptDuel">Accepter</button>
         <button v-if="!showGame" @click="cancelDuel">Refuser</button>
     </div>
-    <Game v-if="showGame" />
+    <Game v-if="showGame" @closeGame="gameOver" />
 </template>
 
 <script>
@@ -41,6 +41,16 @@ export default {
     emits: ['cancelDuel'],
     props: ["duelFriend"],
     methods: {
+        async resetGame() {
+            this.showGame = false;
+            this.isDuelPending = false;
+            this.duelAccepted = false;
+            this.cookies.remove("gameId");
+        },
+        async gameOver() {
+            this.resetGame();
+            this.$emit('cancelDuel');
+        },
         async loopDuel() {
             const baseUrl = `http://${window.location.hostname}`;
             this.intervalId = setInterval(async () => {
@@ -58,14 +68,12 @@ export default {
                     const m = await response.json();
                     this.duelAccepted = m.isDuelAccepted;
                     if (m) {
-                        if (m.isDuel && m.idGameLinked > 0 && !m.isOver) {
+                        if (m.isDuel && m.idGameLinked > 0) {
                             this.cookies.set("gameId", m.idGameLinked);
                             this.showGame = true;
                             clearInterval(this.intervalId);
                         }
                         else if (m.isDuel && m.idGameLinked > 0 && m.isOver) {
-                            this.isDuelPending = false;
-                            this.showGame = false;
                             this.cookies.remove("gameId");
                             this.$emit('cancelDuel');
                             clearInterval(this.intervalId);
@@ -105,10 +113,6 @@ export default {
             this.$emit('cancelDuel');
             console.log('Duel annulé avec succès');
         },
-        // hide the box when the duel is accepted or cancelled
-        // hideDuelBox() {
-        // this.$el.querySelector('.duel-box').classList.remove('show');
-        // }
     }
 }
 

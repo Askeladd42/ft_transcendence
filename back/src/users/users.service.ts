@@ -1,11 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, Pass, Prisma } from '@prisma/client';
+import { CreateUserDTO } from 'src/api/DTO/CreateUser.dto';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  async goodtomake(candidate: CreateUserDTO): Promise<boolean> {
+	if (candidate.id && await this.user({id: candidate.id}))
+		return (false)
+	if (candidate.email && await this.user({email: candidate.email}))
+		return (false)
+	if (candidate.nickname && await this.user({nickname: candidate.nickname}))
+		return (false)
+	return (true)
+  }
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<User | null> {
@@ -62,16 +72,27 @@ export class UserService {
 	// 		id
 	// 	}
 	// }
-    const OurUser = await this.prisma.user.create({
-      data,
-    });
+	if (await this.goodtomake(data as any) != true)
+		return null
+	try {
+		const OurUser = await this.prisma.user.create({
+			data,
+		  });
+		if (this.user(OurUser) == null)
+		  this.createPassForUser(null, OurUser.id);
+	  return OurUser;	
+	} catch (error) {
+		console.log("[user service create user] caught dupe, returning null")
+		return (null)
+	}
+
 	// const OurUser = await this.prisma.user.update({
 	// 	data,
 	// 	where: {
 	// 		id: OurUser.id
 	// 	}
 	// })
-	console.log("Our user's id is ", OurUser.id)
+	//console.log("Our user's id is ", OurUser.id)
 	//const OurPassInput = Prisma.PassCreateInput;
 	//console.log("Trying stuff")
 	//console.log(" ", data: {"bingus": "hi"})
@@ -84,9 +105,7 @@ export class UserService {
 	// 		},
 	// 	}
 	// })
-	if (this.user(OurUser) == null)
-		this.createPassForUser(null, OurUser.id);
-	return OurUser;
+
   }
 
 
@@ -94,11 +113,20 @@ export class UserService {
     where: Prisma.UserWhereUniqueInput;
     data: Prisma.UserUpdateInput;
   }): Promise<User> {
-    const { where, data } = params;
-    return this.prisma.user.update({
-      data,
-      where,
-    });
+	console.log("[user service updateuser] called with ", params.data)
+	if (await this.goodtomake(params.data as any) != true)
+		return null
+	try {
+		const { where, data } = params;
+		return this.prisma.user.update({
+		  data,
+		  where,
+		});	
+	} catch (error) {
+		console.log("[user service update user]Dupe detected, returning null")
+		return (null)
+	}
+	return (null)
   }
 //
   async deleteUser(where: Prisma.UserWhereUniqueInput): Promise<User> {

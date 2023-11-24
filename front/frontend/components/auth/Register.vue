@@ -24,20 +24,20 @@
           <div class="form-group">
             <label for="confirm-register-email">Confirmer l'adresse e-mail :</label>
             <input type="email" class="form-control" id="confirm-register-email" name="confirm-email" required
-              placeholder="Entrez à nouveau votre adresse e-mail">
+              placeholder="Entrez à nouveau votre adresse e-mail" autocomplete="username">
           </div>
 
 
           <div class="form-group">
             <label for="password">Mot de passe :</label>
             <input type="password" class="form-control" id="password" name="password" required
-              placeholder="Entrez votre mot de passe">
+              placeholder="Entrez votre mot de passe" autocomplete="new-password">
           </div>
 
           <div class="form-group">
             <label for="confirm-password">Confirmez le mot de passe :</label>
             <input type="password" class="form-control" id="confirm-register-password" name="confirm-password" required
-              placeholder="Entrez à nouveau votre mot de passe">
+              placeholder="Entrez à nouveau votre mot de passe" autocomplete="new-password">
           </div>
           <!-- Contenu du formulaire d'inscription -->
           <div v-if="formErrors.length > 0">
@@ -75,25 +75,20 @@
   </div>
 </template>
 <script>
-import * as bcrypt from 'bcryptjs';
 import { validateEmail, validatePassword, validateNickname } from '../../script/validator';
 
 export default {
   name: 'Register',
-  data() {
-    return {
+  emits: ['close'],
+  setup() {
+    const state = reactive({
       isRegisteredSuccessfully: false,
       isRegistrationFailed: false,
       isRegisterOpen: true,
       formErrors: [],
-    };
-  },
-  methods: {
-    refresh_page() {
-      window.location.reload();
-    },
-    validateForm() {
-      this.formErrors = []; // réinitialiser les erreurs
+    });
+    const validateForm = () => {
+      state.formErrors = []; // réinitialiser les erreurs
 
       const formData = new FormData(document.querySelector('#register'));
       const email = formData.get('email');
@@ -103,24 +98,23 @@ export default {
       const confirmPassword = formData.get('confirm-password');
 
       if (!validateEmail(email)) {
-        this.formErrors.push('L\'adresse e-mail n\'est pas valide.');
+        state.formErrors.push('L\'adresse e-mail n\'est pas valide.');
       } else if (email !== confirmEmail) {
-        this.formErrors.push('Les adresses e-mail ne correspondent pas.');
+        state.formErrors.push('Les adresses e-mail ne correspondent pas.');
       }
 
       if (!validatePassword(password)) {
-        this.formErrors.push('Le mot de passe ne respecte pas les critères de sécurité requis.');
+        state.formErrors.push('Le mot de passe ne respecte pas les critères de sécurité requis.');
       } else if (password !== confirmPassword) {
-        this.formErrors.push('Les mots de passe ne correspondent pas.');
+        state.formErrors.push('Les mots de passe ne correspondent pas.');
       }
 
       if (!validateNickname(nickname)) {
-        this.formErrors.push('Le pseudo n\'est pas valide ou est déjà pris.');
+        state.formErrors.push('Le pseudo n\'est pas valide ou est déjà pris.');
       }
-      return this.formErrors.length === 0; // retourne vrai si aucune erreur
-    },
-
-    async submitForm() {                 // Fonction pour envoyer le formulaire d'inscription
+      return state.formErrors.length === 0; // retourne vrai si aucune erreur
+    };
+    const submitForm = async () => {                 // Fonction pour envoyer le formulaire d'inscription
       // Récupérer les données du formulaire
       const formData = new FormData(document.querySelector('#register'));
       const email = formData.get('email');
@@ -129,22 +123,13 @@ export default {
       const confirmEmail = formData.get('confirm-email');
       const confirmPassword = formData.get('confirm-password');
       const baseUrl = `http://${window.location.hostname}`;
-      if (!this.validateForm()) {
+      if (!validateForm()) {
         // Si le formulaire n'est pas valide, on ne procède pas à l'envoi
         return;
       }
-      const saltRounds = 10; // Number of salt rounds (cost factor)
-      const salt = bcrypt.genSaltSync(saltRounds); // Generate a salt
-      const hashedPassword = bcrypt.hashSync(password, salt);
-
-      // Créez l'objet `password`.
       const passwordObject = {
-        create: {
-          salted_password: hashedPassword,
-          salt: salt,
-        },
-      };
-
+        salted_password: password,
+      }
       //Envoyer la requête POST à l'API
       const response = await fetch(`${baseUrl}:2000/api/user`, {
         method: 'POST',
@@ -157,35 +142,24 @@ export default {
 
       // Traiter la réponse de l'API
       if (response.ok) {
-        this.isRegisteredSuccessfully = true;
-        this.isRegistrationFailed = false;
+        state.isRegisteredSuccessfully = true;
+        state.isRegistrationFailed = false;
         const data = await response.json();
         const authToken = data.access_token;
         // alert('Account created');
       }
       else {
-        this.isRegisteredSuccessfully = false;
-        this.isRegistrationFailed = true;
+        state.isRegisteredSuccessfully = false;
+        state.isRegistrationFailed = true;
         const data = await response.json();
-        this.error = data.message;
         //alert('Error: can\'t create the account');
-        console.error(this.error);
+        // console.error(state.error);
       }
-    },
-    closeRegister() {
-      this.$emit('close');
-    },
-    logout() {
-      const response = confirm("Are you sure you want to do that?");
-
-      if (response) {
-        alert("Vous êtes déconnecté");
-        this.cookies.remove("authToken");
-        this.isUserLoggedIn = false;
-      } else {
-        alert("Cancel was pressed");
-      }
-    },
+    };
+    const closeRegister = () => {
+      state.isRegisterOpen = false;
+    };
+    return { ...toRefs(state), submitForm, closeRegister, validateForm };
   },
 };
 </script>

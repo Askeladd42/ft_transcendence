@@ -1,8 +1,8 @@
 /* chat.css */
 .chat-icon-container {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 0.1vh;
+    right: 0.1vh;
     cursor: pointer;
 }
 
@@ -13,15 +13,14 @@
 
 #chatContainer {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    height: 420px;
+    bottom: 0.1vh;
+    right: 0.1vh;
+    height: 40vh;
     /* Hauteur fixe pour la liste des chats/channels */
-    width: 560px;
-    max-height: 500px;
-    background-color: #1f1e25;
-    border: 2px solid #9f00c5;
-    box-shadow: 0px 0px 10px #9f00c5;
+    width: 60vh;
+    max-height: 50vh;
+    background-color: #313338;
+    border: 2px solid #313338;
     border-radius: 8px;
     overflow: hidden;
     transition: max-height 0.3s ease-in-out;
@@ -39,7 +38,6 @@
 
 .chat-header {
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0.4);
     color: #0affd1;
     font-family: 'Orbitron', sans-serif;
     text-align: center;
@@ -48,26 +46,29 @@
 }
 
 .chat-content {
-    height: 400px;
+    height: 30vh;
     overflow-y: auto;
-    max-height: 300px;
+    max-height: 40vh;
     padding: 10px;
-    width: 395px;
+    width: 40vh;
     overflow-x: hidden;
     /* Cache la barre de défilement horizontale */
     white-space: pre-wrap;
     /* Les messages longs vont à la ligne automatiquement */
     word-break: break-word;
     /* Assure que les mots longs ne débordent pas du conteneur */
+    scrollbar-color: #1e1f22 #1e1f22;
+    /* thumb and track color */
 }
 
 .channel-content {
-    height: 400px;
+    height: 40vh;
     overflow-y: auto;
-    max-height: 300px;
+    max-height: 60vh;
     padding: 10px;
-    width: 395px;
+    width: 50vh;
     overflow-x: hidden;
+    scrollbar-color: #1e1f22 #1e1f22;
     /* Cache la barre de défilement horizontale */
     white-space: pre-wrap;
     /* Les messages longs vont à la ligne automatiquement */
@@ -76,21 +77,21 @@
 }
 
 .chat-input-container {
-    height: 20px;
-    padding: 10px;
-    border-top: 2px solid #9f00c5;
+    height: 5vh;
+    padding: 1vh;
+    background: #313338;
 }
 
 .chat-input-container input {
     position: sticky;
     width: 64%;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 4px;
+    height: 4vh;
     border: none;
     border-radius: 4px;
     outline: none;
     float: right;
+    background-color: #383A40;
+    color: white;
 }
 
 .chat-container-hidden {
@@ -98,8 +99,8 @@
 }
 
 .friend-chat {
-    height: 100px;
-    width: 50px;
+    height: 10vh;
+    width: 5vh;
 }
 
 .friend-item:hover {
@@ -119,19 +120,24 @@
 }
 
 .channel-list-chat {
-    border-right: #9f00c5 2px solid;
-    width: 20%;
+    width: 10;
     text-overflow: ellipsis;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     white-space: nowrap;
+    text-align: center;
+    background-color: #1E1F22;
+    border-radius: 5%;
+    /* Centre horizontalement */
 }
 
 .pm-chat {
-    border-right: #9f00c5 2px solid;
     width: 20%;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    background-color: #2b2d31;
+    border-radius: 5%;
 }
 
 .message-date {
@@ -146,17 +152,14 @@
     display: flex;
 }
 
-.my-message {
+.my-message,
+.other-message {
     color: white;
 }
 
 .my-message:hover {
     color: grey;
     cursor: pointer;
-}
-
-.other-message {
-    color: #0affd1;
 }
 
 .icon {
@@ -174,19 +177,53 @@
 
 .chat-content::-webkit-scrollbar {
     width: 10px;
+
     /* Largeur de la barre de défilement */
 }
 
 .chat-content::-webkit-scrollbar-track {
-    background: #1f1e25;
+    background: #2B2D31;
+
     /* Couleur du fond de la piste de défilement */
 }
 
 .chat-content::-webkit-scrollbar-thumb {
-    background: #9f00c5;
     /* Couleur de la barre de défilement */
+    color: #1e1f22;
     border-radius: 5px;
     /* Arrondissement des angles */
+}
+
+/* Pour changer la couleur de la barre de défilement lors du survol */
+.chat-content::-webkit-scrollbar-thumb:hover {
+    background: #1e1f22;
+    /* Changez cette couleur à votre choix */
+}
+
+
+.channel-list-chat::-webkit-scrollbar {
+    width: 10px;
+
+    /* Largeur de la barre de défilement */
+}
+
+.channel-list-chat::-webkit-scrollbar-track {
+    background: #2B2D31;
+
+    /* Couleur du fond de la piste de défilement */
+}
+
+.channel-list-chat::-webkit-scrollbar-thumb {
+    /* Couleur de la barre de défilement */
+    color: #1e1f22;
+    border-radius: 5px;
+    /* Arrondissement des angles */
+}
+
+/* Pour changer la couleur de la barre de défilement lors du survol */
+.channel-list-chat::-webkit-scrollbar-thumb:hover {
+    background: #1e1f22;
+    /* Changez cette couleur à votre choix */
 }
 
 .options-list {
@@ -203,8 +240,8 @@
 .context-menu {
     position: fixed;
     color: #fff;
-    background-color: #9f00c5;
-    border: 1px solid #ced4da;
+    background-color: #111214;
+    border: 1px solid #111214;
     border-radius: 4px;
     padding: 10px;
     z-index: 1;
@@ -235,6 +272,77 @@
 .owner-user {
     color: red;
 }
+
 .banned-user {
     color: grey;
 }
+
+.pm-img {
+    width: 3vh;
+    height: 3vh;
+    margin: auto;
+    border-radius: 25%;
+    background: #80848e;
+    padding: 1.5vh;
+    /* Pour ajouter de l'espace entre l'image et le fond. 32px (taille de l'image) + 2*16px (padding) = 64px */
+}
+
+.pm-img:hover {
+    cursor: pointer;
+}
+
+.user-img {
+    width: 4vh;
+    height: 4vh;
+    margin: auto;
+    border-radius: 50%;
+}
+
+.user-img:hover {
+    cursor: pointer;
+}
+
+.active-user {
+    background-color: #404248;
+    border-radius: 3%;
+}
+
+.active-chat {
+    border: 1px solid #F2F3F5;
+}
+
+.user-nickname {
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.message-date {
+    font-size: 8px;
+    font-family: 'Orbitron', sans-serif;
+    text-align: left;
+    color: #9198A2;
+}
+
+.my-img {
+    width: 4vh;
+    height: 4vh;
+    margin: auto;
+    border-radius: 50%;
+    text-align: center;
+}
+
+.my-nickname {
+    color: white;
+    font-size: 16px;
+    font-family: 'Orbitron', sans-serif;
+    text-align: center;
+    font-weight: bold;
+}
+
+#messageContent::placeholder {
+    color: #6D6F79;
+    /* Changez cette couleur à votre choix */
+}
+  
