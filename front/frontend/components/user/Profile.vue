@@ -2,7 +2,7 @@
 <template>
   <!--  Page de profil -->
   <div v-if="isProfileOpen" class="custom-modal-background">
-    <div class="custom-modal">
+    <div class="profile-modal">
       <div class="custom-modal-header">
         <h5>Profil</h5>
         <span @click="closeProfilePage" class="custom-modal-close">&times;</span>
@@ -33,7 +33,7 @@
                 <div class="achievement-list">
                   <div class="uniqueAchievement" v-for="achievement in achievementList" :key="achievement.id">
                     <div class="achievement-img-div">
-                      <img class="achievement-img resized-image" v-if="achievementIsDone(achievement.id) == false" :src="achievement.pathImage"/>
+                      <img class="achievement-img resized-image" v-if="achievementIsDone(achievement.id) == true" :src="achievement.pathImage"/>
                     </div>
                     <div class="achievement-item">
                       <p>{{ achievement.name }} :</p>
@@ -57,8 +57,7 @@
                           <p>{{ game.date }}</p> 
                         </div>
                         <div class="myInfo">
-                            <img class="myImage" :src="currentUserAvatar"/>
-                            <p class="myName">{{ currentNickname }}</p>
+                          <img class="myImage" :src="currentUserAvatar"/>
                         </div>
                         <div class="result">
                           <div class="result Status"></div>
@@ -68,8 +67,10 @@
                             <span class="foeScore">{{ gameResult(game).scoreUser2 }}</span>
                           </div>
                         </div>
-                        <div class="foeInfo">
+                        <div class="foeInfo1">
                           <img class="foeImage" :src="gameResult(game).opponentImage"/>
+                        </div>
+                        <div class="foeInfo1">
                           <p class="foeName">{{ gameResult(game).opponentNickname }}</p>
                         </div>
                       </div>
@@ -454,7 +455,7 @@ export default {
       const data = await response.json();
       return data;
     };
-    const getUserNick = async (id) => {
+    const getUserData = async (id) => {
       const baseUrl = `http://${window.location.hostname}`;
       const response = await fetch(`${baseUrl}:2000/api/user/id/${id}`, {
           method: 'GET',
@@ -464,12 +465,12 @@ export default {
           },
       });
       const data = await response.json();
-      return data.nickname;
+      return data;
     };
     const fetchUser = async (id) => {
       if (!state.users[id]) {
-        const user = await getUserNick(id);
-        state.users[id] = user;
+        const user = await getUserData(id);
+        state.users[id] = { nickname: user.nickname, pathAvatar: user.pathAvatar };
       }
     };
     const gameResult = (game) => {
@@ -484,8 +485,10 @@ export default {
         data.scoreUser1 = game.scoreUser1;
         data.scoreUser2 = game.scoreUser2;
         fetchUser(game.userId2);
-        data.opponentNickname = state.users[game.userId2];
-        data.opponentImage = state.users[game.userId2];
+        data.opponentNickname = state.users[game.userId2].nickname;
+        data.opponentImage = state.users[game.userId2].pathAvatar;
+        console.log(state.users[game.userId2].nickname);
+        console.log(state.users[game.userId2].pathAvatar);
         if (game.scoreUser1 > game.scoreUser2)
           data.result = 'Victoire';
         else if (game.scoreUser1 < game.scoreUser2)
@@ -497,7 +500,10 @@ export default {
         data.scoreUser1 = game.scoreUser2;
         data.scoreUser2 = game.scoreUser1;
         fetchUser(game.userId1);
-        data.opponentNickname = state.users[game.userId1];
+        data.opponentNickname = state.users[game.userId1].nickname;
+        data.opponentImage = state.users[game.userId1].pathAvatar;
+        console.log(state.users[game.userId1].nickname);
+        console.log(state.users[game.userId1].pathAvatar);
         if (game.scoreUser1 > game.scoreUser2)
           data.result = 'Défaite';
         else if (game.scoreUser1 < game.scoreUser2)
@@ -564,6 +570,7 @@ export default {
       getLast10Games,
       getAchievementList,
       getAchievementsDone,
+      getUserData,
       fetchUser,
       gameResult,
     };

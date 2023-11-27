@@ -4,7 +4,7 @@
         <img src="~/assets/icons/matchmaking.svg" class="matchmaking-loading" alt="loading" />
         <button v-if="!showGame" @click="cancelDuel">Annuler</button>
     </div>
-    <div v-else-if="isDuelPending && !duelAccepted && !showGame" class="matchmaking-container">
+    <div v-else-if="isDuelPending && !duelAccepted && !showGame && !duelFriend" class="matchmaking-container">
         <button v-if="!showGame" @click="acceptDuel">Accepter</button>
         <button v-if="!showGame" @click="cancelDuel">Refuser</button>
     </div>
@@ -113,6 +113,10 @@ export default {
             this.$emit('cancelDuel');
             console.log('Duel annulé avec succès');
         },
+        // hide the box when the duel is accepted or cancelled
+        // hideDuelBox() {
+        // this.$el.querySelector('.duel-box').classList.remove('show');
+        // }
     }
 }
 

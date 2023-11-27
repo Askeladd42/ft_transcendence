@@ -69,8 +69,8 @@
     </div>
     <div class="footer">
       <div class="icon-container">
-        <img v-if="isUserLoggedIn && !isPrivateChatOpen" src="~/assets/icons/chat.svg" alt="Chat-Icon"
-          class="icon-chat" @click="isPrivateChatOpen = !isPrivateChatOpen" />
+        <img v-if="isUserLoggedIn && !isPrivateChatOpen" src="~/assets/icons/chat.svg" alt="Chat-Icon" class="icon-chat"
+          @click="isPrivateChatOpen = !isPrivateChatOpen" />
       </div>
     </div>
   </div>
@@ -172,14 +172,17 @@ export default {
       }
       window.history.replaceState({}, document.title, "/");
       checkLoginStatus();
-      if (state.showMatchmaking)
-        state.intervalId = setInterval(() => {
-          loopDuelMatchmaking();
-        }, 2000);
+      state.intervalId = setInterval(() => {
+        loopDuelMatchmaking();
+      }, 2000);
       setInterval(() => {
         heartBeat();
       }, 1000);
     });
+    onUnmounted(() => {
+      clearInterval(state.intervalId);
+    });
+
     const handleInviteChannel = (friend) => {
       state.showChannelList = true;
       state.showMenu = false;
@@ -257,6 +260,7 @@ export default {
     };
     const handleCloseDuel = () => {
       state.showDuel = false;
+      state.showAccept = false;
       state.showMenu = true;
     };
     const handleQuitGame = () => {

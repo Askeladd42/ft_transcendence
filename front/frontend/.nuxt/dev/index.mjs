@@ -28,7 +28,7 @@ const r=Object.create(null),t=e=>globalThis.process?.env||globalThis._importMeta
 
 const inlineAppConfig = {
   "nuxt": {
-    "buildId": "dev"
+    "buildId": "test"
   }
 };
 
